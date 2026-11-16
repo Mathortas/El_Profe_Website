@@ -64,7 +64,7 @@ export function roundRobin(teams: string[], r: Rng): [string, string][][] {
   const n = t.length, half: [string, string][][] = [];
   for (let k = 0; k < n - 1; k++) {
     const round: [string, string][] = [];
-    for (let i = 0; i < n / 2; i++) { const x = t[i], y = t[n - 1 - i]; round.push((k + i) % 2 ? [y, x] : [x, y]); }
+    for (let i = 0; i < n / 2; i++) { const x = t[i], y = t[n - 1 - i]; round.push((i === 0 ? k % 2 === 1 : i % 2 === 0) ? [y, x] : [x, y]); }
     half.push(round); t.splice(1, 0, t.pop()!);
   }
   return [...half, ...half.map(rd => rd.map(([h, a]) => [a, h] as [string, string]))];
