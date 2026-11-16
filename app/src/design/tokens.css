@@ -1,0 +1,152 @@
+/*
+  El Profe — tokens del sistema de diseño.
+  Una sola familia (Archivo, con eje de ancho): condensada para números y marcadores,
+  normal para leer. Superficies por escalones, sin sombras decorativas.
+  El acento cambia según la selección dirigida (ver theme.ts).
+*/
+
+:root {
+  /* Tipografía */
+  --font: "Archivo Variable", "Segoe UI", system-ui, sans-serif;
+  --stretch-num: 72%;     /* números, medias, marcadores */
+  --stretch-head: 88%;    /* títulos */
+  --stretch-body: 100%;   /* lectura */
+
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-20: 20px;
+  --fs-26: 26px;
+  --fs-34: 34px;
+  --fs-48: 48px;
+  --fs-64: 64px;
+
+  /* Espacios (base 4) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* Bordes */
+  --r-badge: 4px;
+  --r-control: 8px;
+  --r-panel: 12px;
+  --r-pill: 999px;
+
+  /* Movimiento */
+  --t-fast: 120ms;
+  --t-base: 200ms;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+
+  /* Acento (lo reescribe theme.ts) */
+  --accent: #d91023;
+  --accent-2: #ffffff;
+  --on-accent: #ffffff;
+  --accent-soft: color-mix(in oklab, var(--accent) 16%, transparent);
+  --accent-ink: color-mix(in oklab, var(--accent) 72%, var(--text));
+
+  /* Niveles de media (estilo FIFA) */
+  --tier-bronze: #c48b58;
+  --tier-silver: #b3c0c8;
+  --tier-gold: #e2bd43;
+  --on-tier: #16130b;
+
+  /* Forma (estilo PES) */
+  --form-2: #20a85c;
+  --form-1: #86c75a;
+  --form-0: #e4b13a;
+  --form-m1: #e8863d;
+  --form-m2: #e2483a;
+
+  /* Estados */
+  --good: #20a85c;
+  --warn: #e3a72f;
+  --bad: #e2483a;
+  --info: #3d8fdc;
+
+  /* Líneas del campo (para chips de posición) */
+  --line-gk: #e3a72f;
+  --line-def: #3d8fdc;
+  --line-mid: #20a85c;
+  --line-att: #e2483a;
+}
+
+:root[data-theme="dark"] {
+  --bg: #111214;
+  --surface-1: #1a1b1e;
+  --surface-2: #232428;
+  --surface-3: #2d2f34;
+  --line: #34363c;
+  --line-strong: #4a4d55;
+  --text: #f2f3f5;
+  --text-2: #b8bbc2;
+  --text-3: #8b8f98;
+  --pitch: #2a6b43;
+  --pitch-2: #256139;
+  --pitch-line: rgba(255, 255, 255, .62);
+  --overlay: rgba(0, 0, 0, .6);
+  --shadow-pop: 0 18px 48px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #f3f4f6;
+  --surface-1: #ffffff;
+  --surface-2: #f0f1f3;
+  --surface-3: #e4e6ea;
+  --line: #dcdfe4;
+  --line-strong: #bfc3cb;
+  --text: #15171a;
+  --text-2: #4a4f57;
+  --text-3: #6e737c;
+  --pitch: #3f8f5c;
+  --pitch-2: #398652;
+  --pitch-line: rgba(255, 255, 255, .85);
+  --overlay: rgba(17, 18, 20, .35);
+  --shadow-pop: 0 18px 48px rgba(17, 18, 20, .18);
+  color-scheme: light;
+}
+
+/* Base */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-14);
+  line-height: 1.45;
+  font-stretch: var(--stretch-body);
+  font-weight: 420;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+.num {
+  font-stretch: var(--stretch-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.head {
+  font-stretch: var(--stretch-head);
+  font-weight: 650;
+  letter-spacing: -.005em;
+}
+
+.t2 { color: var(--text-2); }
+.t3 { color: var(--text-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

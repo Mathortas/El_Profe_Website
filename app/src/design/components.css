@@ -1,0 +1,322 @@
+/* El Profe — estilos de los componentes. Prefijo ep- para no chocar con nada. */
+
+/* ---------- Panel ---------- */
+.ep-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  min-width: 0;
+}
+.ep-panel__head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+.ep-panel__title {
+  display: flex; align-items: center; gap: var(--sp-2);
+  margin: 0; font-size: var(--fs-16);
+  font-stretch: var(--stretch-head); font-weight: 650;
+}
+.ep-panel__title svg { color: var(--text-3); }
+.ep-panel__body { padding: var(--sp-3) var(--sp-4); }
+.ep-panel__body--flush { padding: 0; }
+
+/* ---------- Botones ---------- */
+.ep-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  min-height: 36px; padding: 0 var(--sp-4);
+  border-radius: var(--r-control);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-weight: 540; white-space: nowrap;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.ep-btn:hover { background: var(--surface-3); }
+.ep-btn--primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.ep-btn--primary:hover { background: color-mix(in oklab, var(--accent) 88%, var(--text)); }
+.ep-btn--ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+.ep-btn--ghost:hover { background: var(--surface-2); color: var(--text); }
+.ep-btn--danger { color: var(--bad); }
+.ep-btn--sm { min-height: 28px; padding: 0 var(--sp-3); font-size: var(--fs-13); }
+.ep-btn:disabled { opacity: .45; cursor: not-allowed; }
+.ep-icon-btn {
+  display: inline-grid; place-items: center; width: 36px; height: 36px;
+  border-radius: var(--r-control); border: 1px solid var(--line-strong); background: var(--surface-2);
+}
+.ep-icon-btn:hover { background: var(--surface-3); }
+
+/* ---------- Chips y control segmentado ---------- */
+.ep-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 28px; padding: 0 var(--sp-3);
+  border-radius: var(--r-pill); border: 1px solid var(--line-strong);
+  background: transparent; color: var(--text-2); font-size: var(--fs-13);
+}
+.ep-chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: transparent; }
+.ep-seg {
+  display: inline-flex; padding: 3px; gap: 2px;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-control);
+}
+.ep-seg button {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 0; background: transparent; color: var(--text-2);
+  padding: 5px 12px; border-radius: 6px; font-size: var(--fs-13);
+}
+.ep-seg button[aria-pressed="true"] { background: var(--surface-1); color: var(--text); box-shadow: 0 0 0 1px var(--line-strong); }
+
+/* ---------- Etiquetas ---------- */
+.ep-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 1px 7px; border-radius: var(--r-badge);
+  font-size: var(--fs-12); font-weight: 560;
+  background: var(--surface-3); color: var(--text-2);
+}
+.ep-tag--good { background: color-mix(in oklab, var(--good) 18%, transparent); color: var(--good); }
+.ep-tag--warn { background: color-mix(in oklab, var(--warn) 20%, transparent); color: color-mix(in oklab, var(--warn) 80%, var(--text)); }
+.ep-tag--bad  { background: color-mix(in oklab, var(--bad) 18%, transparent); color: var(--bad); }
+.ep-tag--info { background: color-mix(in oklab, var(--info) 18%, transparent); color: var(--info); }
+
+/* ---------- Media (estilo FIFA) ---------- */
+.ep-rating {
+  display: inline-grid; place-items: center;
+  min-width: 34px; height: 26px; padding: 0 6px;
+  border-radius: 6px; color: var(--on-tier);
+  font-stretch: var(--stretch-num); font-weight: 750; font-size: var(--fs-16);
+  font-variant-numeric: tabular-nums;
+}
+.ep-rating--bronze { background: var(--tier-bronze); }
+.ep-rating--silver { background: var(--tier-silver); }
+.ep-rating--gold   { background: var(--tier-gold); }
+.ep-rating--sm { min-width: 28px; height: 22px; font-size: var(--fs-14); border-radius: 5px; }
+.ep-rating--lg { min-width: 48px; height: 38px; font-size: var(--fs-26); border-radius: 8px; }
+.ep-value { font-stretch: var(--stretch-num); font-weight: 700; font-variant-numeric: tabular-nums; }
+.ep-value--bronze { color: var(--tier-bronze); }
+.ep-value--silver { color: var(--tier-silver); }
+.ep-value--gold   { color: var(--tier-gold); }
+:root[data-theme="light"] .ep-value--silver { color: #6f8290; }
+:root[data-theme="light"] .ep-value--gold { color: #a8851c; }
+:root[data-theme="light"] .ep-value--bronze { color: #9a6534; }
+
+/* ---------- Forma ---------- */
+.ep-form { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-13); }
+.ep-form svg { width: 20px; height: 20px; flex: none; }
+
+/* ---------- Posición ---------- */
+.ep-pos {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 38px; height: 22px; padding: 0 6px 0 8px;
+  border-radius: 5px; background: var(--surface-3);
+  font-size: var(--fs-11); font-weight: 700; letter-spacing: .02em;
+  box-shadow: inset 3px 0 0 var(--pos-color, var(--line-strong));
+}
+.ep-pos--gk  { --pos-color: var(--line-gk); }
+.ep-pos--def { --pos-color: var(--line-def); }
+.ep-pos--mid { --pos-color: var(--line-mid); }
+.ep-pos--att { --pos-color: var(--line-att); }
+
+/* ---------- Bandera ---------- */
+.ep-flag { display: inline-flex; align-items: center; gap: 6px; }
+.ep-flag .fi { width: 1.4em; line-height: 1.05em; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,.18); }
+.ep-flag--lg .fi { width: 2.2em; line-height: 1.6em; }
+
+/* ---------- Medidor ---------- */
+.ep-meter { min-width: 84px; }
+.ep-meter__top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.ep-meter__label { font-size: var(--fs-12); color: var(--text-2); }
+.ep-meter__value { font-size: var(--fs-20); }
+.ep-meter__delta { font-size: var(--fs-12); font-weight: 600; }
+.ep-meter__bar { height: 4px; margin-top: 3px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+.ep-meter__bar i { display: block; height: 100%; border-radius: 4px; background: var(--text-2); }
+.ep-meter--low .ep-meter__bar i { background: var(--bad); }
+.ep-meter--mid .ep-meter__bar i { background: var(--warn); }
+.ep-meter--high .ep-meter__bar i { background: var(--good); }
+
+/* ---------- Duelo de estadística ---------- */
+.ep-duel { padding: 6px 0; }
+.ep-duel__row { display: flex; justify-content: space-between; align-items: baseline; font-size: var(--fs-12); color: var(--text-2); }
+.ep-duel__row b { font-size: var(--fs-16); color: var(--text); }
+.ep-duel__bar { display: flex; gap: 3px; height: 6px; margin-top: 4px; }
+.ep-duel__bar i { border-radius: 3px; }
+.ep-duel__bar i:first-child { background: var(--accent); }
+.ep-duel__bar i:last-child { background: var(--text-3); }
+
+/* ---------- Tabla ordenable ---------- */
+.ep-table-wrap { overflow-x: auto; }
+.ep-table { width: 100%; border-collapse: collapse; font-size: var(--fs-13); }
+.ep-table th {
+  position: sticky; top: 0; z-index: 1;
+  text-align: left; font-weight: 560; color: var(--text-2); font-size: var(--fs-12);
+  background: var(--surface-1); border-bottom: 1px solid var(--line-strong);
+  padding: 0; white-space: nowrap;
+}
+.ep-table th button {
+  display: inline-flex; align-items: center; gap: 4px; width: 100%;
+  border: 0; background: transparent; padding: 8px 10px; color: inherit; font-weight: inherit; text-align: left;
+}
+.ep-table th button:hover { color: var(--text); }
+.ep-table th[aria-sort="ascending"] button, .ep-table th[aria-sort="descending"] button { color: var(--text); }
+.ep-table th .ep-sort { width: 14px; height: 14px; opacity: .35; }
+.ep-table th[aria-sort="ascending"] .ep-sort, .ep-table th[aria-sort="descending"] .ep-sort { opacity: 1; color: var(--accent-ink); }
+.ep-table td { padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.ep-table tbody tr { transition: background var(--t-fast); }
+.ep-table tbody tr:hover td { background: var(--surface-2); }
+.ep-table tbody tr[aria-selected="true"] td { background: var(--accent-soft); }
+.ep-table .is-num { text-align: right; font-stretch: var(--stretch-num); font-variant-numeric: tabular-nums; font-weight: 600; font-size: var(--fs-14); }
+.ep-table th.is-num button { justify-content: flex-end; }
+
+/* ---------- Nombre de jugador en filas ---------- */
+.ep-who { display: flex; flex-direction: column; line-height: 1.2; }
+.ep-who b { font-weight: 600; }
+.ep-who span { font-size: var(--fs-12); color: var(--text-3); }
+
+/* ---------- Tarjeta de jugador ---------- */
+.ep-card {
+  position: relative; overflow: hidden;
+  display: grid; grid-template-columns: 84px 1fr; gap: var(--sp-3);
+  padding: var(--sp-4); border-radius: var(--r-panel);
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--accent) 24%, var(--surface-1)) 0%, var(--surface-1) 62%);
+  border: 1px solid var(--line);
+}
+.ep-card__ovr {
+  display: grid; place-items: center; align-content: center; gap: 2px;
+  height: 96px; border-radius: 10px; color: var(--on-tier);
+}
+.ep-card__ovr b { font-size: var(--fs-48); line-height: 1; font-stretch: var(--stretch-num); font-weight: 780; }
+.ep-card__ovr span { font-size: var(--fs-13); font-weight: 700; font-stretch: var(--stretch-num); }
+.ep-card__name { margin: 0; font-size: var(--fs-20); font-stretch: var(--stretch-head); font-weight: 700; line-height: 1.15; }
+.ep-card__meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: var(--fs-13); color: var(--text-2); }
+.ep-card__six { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding-top: var(--sp-3); border-top: 1px solid var(--line); }
+.ep-card__six div { text-align: center; }
+.ep-card__six b { display: block; font-size: var(--fs-20); }
+.ep-card__six span { font-size: var(--fs-11); color: var(--text-3); font-weight: 600; }
+
+/* ---------- Lista de atributos ---------- */
+.ep-attrs { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 2px 24px; }
+.ep-attrs h4 { grid-column: 1 / -1; margin: var(--sp-3) 0 2px; font-size: var(--fs-12); color: var(--text-3); font-weight: 600; }
+.ep-attr { display: grid; grid-template-columns: 1fr 64px 28px; align-items: center; gap: 8px; padding: 3px 0; font-size: var(--fs-13); }
+.ep-attr__bar { height: 4px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+.ep-attr__bar i { display: block; height: 100%; background: currentColor; }
+.ep-attr b { text-align: right; font-size: var(--fs-14); }
+
+/* ---------- Formación ---------- */
+.ep-formation { display: block; width: 100%; height: auto; border-radius: 8px; background: var(--pitch); }
+
+/* ---------- Opción táctica ---------- */
+.ep-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--sp-2); }
+.ep-option {
+  display: grid; gap: 4px; text-align: left;
+  padding: var(--sp-3); border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface-2);
+  transition: border-color var(--t-fast);
+}
+.ep-option:hover { border-color: var(--line-strong); }
+.ep-option[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+.ep-option__head { display: flex; align-items: center; gap: 8px; font-weight: 650; }
+.ep-option__head svg { color: var(--text-3); }
+.ep-option[aria-pressed="true"] .ep-option__head svg { color: var(--accent-ink); }
+.ep-option p { margin: 0; font-size: var(--fs-12); color: var(--text-2); }
+
+/* ---------- Celular y mensajes ---------- */
+.ep-phone {
+  width: 100%; max-width: 340px;
+  padding: 10px; border-radius: 32px;
+  background: #050807; border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-pop);
+}
+.ep-phone__screen { border-radius: 23px; overflow: hidden; background: var(--surface-1); }
+.ep-phone__bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px 4px; font-size: var(--fs-11); color: var(--text-3); font-weight: 600; }
+.ep-phone__head { display: flex; justify-content: space-between; align-items: center; padding: 6px 16px 10px; }
+.ep-phone__head h3 { margin: 0; font-size: var(--fs-20); font-stretch: var(--stretch-head); font-weight: 700; }
+.ep-count {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px;
+  border-radius: 11px; background: var(--accent); color: var(--on-accent);
+  font-size: var(--fs-12); font-weight: 750; font-stretch: var(--stretch-num);
+}
+.ep-msg { display: grid; grid-template-columns: 38px 1fr; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.ep-msg:hover { background: var(--surface-2); }
+.ep-msg__av { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); color: var(--text-2); }
+.ep-msg__top { display: flex; justify-content: space-between; gap: 8px; }
+.ep-msg__top b { font-weight: 650; }
+.ep-msg__top time { font-size: var(--fs-11); color: var(--text-3); }
+.ep-msg p { margin: 2px 0 8px; font-size: var(--fs-13); color: var(--text-2); }
+.ep-msg__acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.ep-msg--unread .ep-msg__top b::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--accent); vertical-align: middle; }
+
+/* ---------- Tarea con delegación ---------- */
+.ep-task {
+  display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4); border-top: 1px solid var(--line);
+}
+.ep-task:first-child { border-top: 0; }
+.ep-task__icon { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-2); color: var(--text-2); }
+.ep-task__title { font-weight: 600; }
+.ep-task__sub { font-size: var(--fs-12); color: var(--text-3); }
+.ep-task--done .ep-task__icon { background: color-mix(in oklab, var(--good) 18%, transparent); color: var(--good); }
+
+/* ---------- Recomendación del cuerpo técnico ---------- */
+.ep-tip {
+  display: grid; grid-template-columns: 32px 1fr; gap: var(--sp-3);
+  padding: var(--sp-3); border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--line);
+}
+.ep-tip__av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); }
+.ep-tip b { display: block; font-size: var(--fs-12); color: var(--text-3); font-weight: 600; }
+.ep-tip p { margin: 2px 0 0; }
+
+/* ---------- Partido programado ---------- */
+.ep-fixture {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+}
+.ep-fixture__team { display: flex; align-items: center; gap: 10px; }
+.ep-fixture__team:last-child { justify-content: flex-end; text-align: right; }
+.ep-fixture__team b { font-size: var(--fs-20); font-stretch: var(--stretch-num); font-weight: 750; }
+.ep-fixture__team span { display: block; font-size: var(--fs-12); color: var(--text-3); }
+.ep-fixture__mid { text-align: center; font-size: var(--fs-12); color: var(--text-2); }
+.ep-fixture__mid strong { display: block; font-size: var(--fs-16); color: var(--text); font-stretch: var(--stretch-num); }
+
+/* ---------- Medidor con ícono ---------- */
+.ep-meter__label { display: inline-flex; align-items: center; gap: 5px; }
+.ep-meter__label svg { width: 14px; height: 14px; color: var(--text-3); }
+.ep-crest {
+  display: inline-grid; place-items: center; width: 16px; height: 18px;
+  clip-path: polygon(0 0, 100% 0, 100% 62%, 50% 100%, 0 62%);
+  background: var(--accent); overflow: hidden;
+}
+.ep-crest .fi { width: 16px; height: 18px; background-size: cover; }
+
+/* ---------- Estado en la tarjeta ---------- */
+.ep-card { grid-template-columns: 84px minmax(0, 1fr) minmax(150px, auto); }
+.ep-card__status { display: grid; gap: 6px; align-content: start; padding-left: var(--sp-3); border-left: 1px solid var(--line); font-size: var(--fs-12); color: var(--text-2); }
+.ep-card__status div { display: flex; align-items: center; gap: 6px; }
+.ep-card__status svg { width: 14px; height: 14px; flex: none; color: var(--text-3); }
+.ep-card__last { display: flex; gap: 3px; }
+.ep-card__last i { font-style: normal; min-width: 26px; text-align: center; padding: 1px 3px; border-radius: 4px; background: var(--surface-3); color: var(--text); font-stretch: var(--stretch-num); font-weight: 650; }
+.ep-card__last i.hi { background: color-mix(in oklab, var(--good) 28%, var(--surface-3)); }
+.ep-card__last i.lo { background: color-mix(in oklab, var(--bad) 24%, var(--surface-3)); }
+.ep-yellow { display: inline-block; width: 9px; height: 12px; border-radius: 2px; background: #f2c230; }
+@media (max-width: 640px) {
+  .ep-card { grid-template-columns: 84px minmax(0, 1fr); }
+  .ep-card__status { grid-column: 1 / -1; padding: var(--sp-3) 0 0; border-left: 0; border-top: 1px solid var(--line); }
+}
+
+/* ---------- Pizarra (formación movible) ---------- */
+.ep-formation--edit { touch-action: none; user-select: none; }
+.ep-formation--edit .ep-dot { cursor: grab; }
+.ep-formation--edit .ep-dot:active { cursor: grabbing; }
+
+/* ---------- Celular flotante ---------- */
+.ep-dock { position: fixed; right: 20px; bottom: 20px; z-index: 60; display: grid; justify-items: end; gap: 10px; }
+.ep-dock__btn {
+  position: relative; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px;
+  background: var(--surface-1); border: 1px solid var(--line-strong); box-shadow: var(--shadow-pop); color: var(--text);
+}
+.ep-dock__btn .ep-count { position: absolute; top: -6px; right: -6px; }
+.ep-dock__panel { transform-origin: bottom right; transition: transform var(--t-base) var(--ease), opacity var(--t-base) var(--ease); }
+.ep-dock__panel[data-open="false"] { transform: translateY(12px) scale(.96); opacity: 0; pointer-events: none; visibility: hidden; }
+.ep-dock__panel .ep-phone { width: 340px; max-height: min(640px, calc(100vh - 110px)); overflow: auto; }
+@media (max-width: 640px) {
+  .ep-dock { right: 12px; bottom: 12px; }
+  .ep-dock__panel .ep-phone { width: calc(100vw - 24px); }
+}
