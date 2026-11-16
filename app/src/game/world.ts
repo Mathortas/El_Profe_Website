@@ -28,7 +28,7 @@ export const stopLabel = (s: Stop) => `${s.m} de ${s.y}`;
 export function expected(g: Game, h: string, a: string, neutral = false, venueAlt = 0): [number, number] {
   const d = (g.nations[h]?.str ?? 60) - (g.nations[a]?.str ?? 60);
   const alt = neutral ? 0 : altitudeEdge(venueAlt || homeAltitude(h), homeAltitude(a));
-  return [clamp(1.3 + 0.085 * d + (neutral ? 0 : 0.32) + alt, 0.2, 3.8), clamp(1.12 - 0.085 * d - alt * 0.5, 0.15, 3.4)];
+  return [clamp(1.3 + 0.06 * d + (neutral ? 0 : 0.3) + alt, 0.2, 3.2), clamp(1.1 - 0.06 * d - alt * 0.5, 0.15, 3)];
 }
 export function quick(g: Game, r: Rng, h: string, a: string, neutral = false, ko = false): { gh: number; ga: number; pens?: [number, number] } {
   const [lh, la] = expected(g, h, a, neutral);
@@ -103,14 +103,14 @@ export function fixturesFor(g: Game, s: Stop): Fx[] {
     const { playoff } = elimSlots(g);
     if (playoff === g.me) {
       const rival = Object.values(g.nations).filter(n => n.conf !== 'CONMEBOL' && n.conf !== 'UEFA').sort((x, y) => y.pts - x.pts).slice(8, 14)[Math.floor(r() * 6)].c;
-      return [{ id: g.next++, comp: 'AM', h: g.me, a: friendly(g, r, []), label: 'Amistoso de preparación', venue: 0 }, { id: g.next++, comp: 'RE', h: g.me, a: rival, label: 'Repechaje', neutral: true, ko: true }];
+      return [{ id: g.next++, comp: 'AM', h: g.me, a: friendly(g, r, []), label: 'Preparación', venue: 0 }, { id: g.next++, comp: 'RE', h: g.me, a: rival, label: 'Repechaje', neutral: true, ko: true }];
     }
   }
   const used: string[] = [];
   return Array.from({ length: s.n }, (_, i) => {
     const rival = friendly(g, r, used); used.push(rival);
     const home = i % 2 === 0;
-    return { id: g.next++, comp: 'AM' as Comp, h: home ? g.me : rival, a: home ? rival : g.me, label: 'Amistoso', venue: 0 };
+    return { id: g.next++, comp: 'AM' as Comp, h: home ? g.me : rival, a: home ? rival : g.me, label: `Partido ${i + 1} de ${s.n}`, venue: 0 };
   });
 }
 function friendly(g: Game, r: Rng, used: string[]): string {

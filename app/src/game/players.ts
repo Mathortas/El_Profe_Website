@@ -34,9 +34,10 @@ export function buildPlayers(raw: RawWorld, seed: number, year = 2026): P[] {
     const ovr = Math.round(levelFromValue(val, peak, age, caps));
     const traj = old > 0 && val / old >= 2 ? 3 : old > 0 && val / old >= 1.3 ? 1.5 : 0;
     const pot = Math.round(clamp(age <= 23 ? ovr + (24 - age) * 1.5 + traj + r() * 4 : age <= 27 ? ovr + r() * 2 : ovr, ovr, 96));
-    const share = lg ? Math.min(1, mins / 2700) : clamp(0.5 + gauss(r) * 0.2, 0.1, 1);
+    const tracked = !!lg && (games > 0 || val === 0);                              // hay ligas sin datos de minutos
+    const share = tracked ? Math.min(1, mins / 2700) : clamp(0.5 + gauss(r) * 0.2, 0.1, 1);
     const prod = games > 0 ? (goals + ast) / games : 0;
-    const form = lg ? (share > 0.75 && prod > 0.4 ? 2 : share > 0.55 ? 1 : share < 0.15 ? -1 : 0) : Math.round(clamp(gauss(r) * 0.8, -1, 1));
+    const form = tracked ? (share > 0.75 && prod > 0.4 ? 2 : share > 0.55 ? 1 : share < 0.15 ? -1 : 0) : Math.round(clamp(gauss(r) * 0.8, -1, 1));
     return {
       id, n, nat, nat2, by, bm, pos, foot, h, val, club, lg, ovr, pot, six: sixFor(pos, ovr, r), form, mins: share, caps, ig,
       per: [0, 0, 0, 0].map(() => Math.round(clamp(11 + gauss(r) * 3.5, 1, 20))), curve: Math.floor(r() * 4),
