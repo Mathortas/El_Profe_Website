@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, type PointerEvent as RPointerEvent } from 'react';
 import { ArrowRight, FastForward, MapPin, Play, Shield, Sparkles } from 'lucide-react';
 import { Button, FormArrow, Panel, PositionChip, Segmented, StatDuel, Tag, type Form } from '../design';
 import { COMP_NAME, type Game, type P } from '../game/core.ts';
@@ -30,16 +30,27 @@ export function Tactics({ g, onChange }: { g: Game; onChange?: () => void }) {
   );
 }
 
-function Pitch({ g, sel, onPick }: { g: Game; sel: number; onPick: (id: number) => void }) {
-  const m = byId(g), spots = FORMS[g.lineup.tac.form];
+function Pitch({ g, sel, onPick, onSwap }: { g: Game; sel: number; onPick: (id: number) => void; onSwap: (a: number, b: number) => void }) {
+  const m = byId(g), spots = FORMS[g.lineup.tac.form], svg = useRef<SVGSVGElement>(null);
+  const [drag, setDrag] = useState<{ id: number; x: number; y: number; sx: number; sy: number; moved: boolean } | null>(null);
+  const pt = (e: RPointerEvent) => { const ctm = svg.current?.getScreenCTM(); if (!ctm) return null; const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse()); return { x: q.x, y: q.y }; };
+  const drop = () => {
+    if (!drag) return;
+    if (!drag.moved) onPick(drag.id);
+    else { let best = 0, bd = 120; g.lineup.xi.forEach((id, i) => { if (id === drag.id) return; const d = Math.hypot(spots[i][1] * 10 + 40 - drag.x, spots[i][2] * 10 - drag.y); if (d < bd) { bd = d; best = id; } }); if (best) onSwap(drag.id, best); }
+    setDrag(null);
+  };
   return (
-    <svg className="pitch" viewBox="0 0 1050 680" role="group" aria-label="Once titular">
+    <svg ref={svg} className="pitch" viewBox="0 0 1050 680" role="group" aria-label="Once titular" onPointerUp={drop} onPointerLeave={drop}
+      onPointerMove={e => { if (!drag) return; const q = pt(e); if (q) setDrag(d => d && { ...d, x: q.x, y: q.y, moved: d.moved || Math.hypot(q.x - d.sx, q.y - d.sy) > 16 }); }}>
       <rect width="1050" height="680" rx="14" className="pitch__grass" />
       {[0, 1, 2, 3, 4, 5, 6].map(i => <rect key={i} x={i * 150} width="75" height="680" className="pitch__stripe" />)}
       <g className="pitch__lines"><rect x="6" y="6" width="1038" height="668" rx="8" /><line x1="525" y1="6" x2="525" y2="674" /><circle cx="525" cy="340" r="91" /><rect x="6" y="138" width="165" height="404" /><rect x="879" y="138" width="165" height="404" /><rect x="6" y="248" width="55" height="184" /><rect x="989" y="248" width="55" height="184" /></g>
-      {g.lineup.xi.map((id, i) => { const p = m.get(id); if (!p) return null; const [role, x, y] = spots[i], ok = fit(p.pos, role), bad = !available(p);
+      {g.lineup.xi.map((id, i) => { const p = m.get(id); if (!p) return null; const [role, x, y] = spots[i], ok = fit(p.pos, role), bad = !available(p), dr = drag?.id === id && drag.moved;
+        const px = dr ? drag!.x : x * 10 + 40, py = dr ? drag!.y : y * 10;
         return (
-          <g key={id} transform={`translate(${x * 10 + 40},${y * 10})`} className={`pp${sel === id ? ' sel' : ''}${bad ? ' bad' : ok < 0.9 ? ' off' : ''}`} onClick={() => onPick(id)} role="button" aria-label={`${p.n}, ${role}`}>
+          <g key={id} style={{ transform: `translate(${px}px, ${py}px)` }} className={`pp${sel === id ? ' sel' : ''}${bad ? ' bad' : ok < 0.9 ? ' off' : ''}${dr ? ' drag' : ''}`} role="button" aria-label={`${p.n}, ${role}`}
+            onPointerDown={e => { const q = pt(e); if (q) setDrag({ id, x: q.x, y: q.y, sx: q.x, sy: q.y, moved: false }); }}>
             <circle r="30" /><text className="pp__ovr" y="8">{p.ovr}</text>
             <text className="pp__n" y="52">{p.n.split(' ').slice(-1)[0]}{g.lineup.cap === id ? ' (C)' : ''}</text>
             <text className="pp__r" y="-38">{role}</text>
@@ -67,9 +78,9 @@ function Previa({ g }: { g: Game }) {
         <Panel title={`${COMP_NAME[fx.comp]} · ${fx.label}`} icon={<Shield size={17} />} actions={<div className="row"><Button size="sm" icon={<Sparkles size={15} />} onClick={() => act(x => autoLineup(x))}>Mejor once</Button></div>}>
           <div className="row wrap between">
             <Segmented label="Formación" value={g.lineup.tac.form} onChange={f => act(x => autoLineup(x, f))} options={Object.keys(FORMS).map(f => ({ value: f, label: f }))} />
-            <span className="muted small">Toca dos jugadores para intercambiarlos.</span>
+            <span className="muted small">Arrastra un jugador sobre otro, o toca dos para intercambiarlos.</span>
           </div>
-          <Pitch g={g} sel={sel} onPick={pickP} />
+          <Pitch g={g} sel={sel} onPick={pickP} onSwap={(x1, x2) => { act(x => swapLineup(x, x1, x2)); setSel(0); }} />
           <h3>Suplentes</h3>
           <ul className="bench">{g.lineup.bench.map(id => m.get(id)!).filter(Boolean).map(benchRow)}</ul>
         </Panel>
@@ -105,7 +116,7 @@ function Previa({ g }: { g: Game }) {
 function Post({ g }: { g: Game }) {
   const l = g.log[0], m = byId(g), home = l.fx.h === g.me;
   const mine = Object.entries(l.rating).map(([id, r]) => ({ p: m.get(Number(id)), r })).filter(x => x.p && x.p.nat === g.me).sort((a, b) => b.r - a.r);
-  const S = ['Posesión', 'Tiros', 'Al arco', 'Córners', 'Faltas', 'Pases', 'Pases buenos'];
+  const S = ['Posesión', 'Tiros', 'Al arco', 'Córners', 'Faltas', 'Pases', 'Pases buenos', 'Fueras de juego'];
   return (
     <div className="stack">
       <Panel>

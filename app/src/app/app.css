@@ -158,3 +158,71 @@
 /* El celular flotante no debe tapar los clics cuando está cerrado. */
 .ep-dock { pointer-events: none; }
 .ep-dock__btn, .ep-dock__panel[data-open="true"] { pointer-events: auto; }
+
+/* ---------- Movimiento ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes slideIn { from { transform: translateX(36px); opacity: 0; } }
+@keyframes zoomIn { from { transform: scale(.96) translateY(8px); opacity: 0; } }
+@keyframes settle { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 55%, transparent); } 100% { box-shadow: 0 0 0 14px transparent; } }
+@keyframes pulse { 50% { opacity: .45; } }
+@keyframes drift { to { transform: translate3d(-4%, 3%, 0) rotate(2deg); } }
+@keyframes goalIn { 0% { transform: translate(-50%, -50%) scale(.4); opacity: 0; } 14% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; } 22%, 82% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -62%) scale(1); opacity: 0; } }
+@keyframes bannerIn { from { transform: translate(-50%, -8px); opacity: 0; } }
+@keyframes sweep { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+
+.screen > .grid > *, .screen > .stack > *, .screen > .ep-panel, .screen > .match > * { animation: rise .34s var(--ease) both; }
+.screen > .grid > *:nth-child(2), .screen > .stack > *:nth-child(2), .screen > .match > *:nth-child(2) { animation-delay: .05s; }
+.screen > .grid > *:nth-child(3), .screen > .stack > *:nth-child(3) { animation-delay: .1s; }
+.screen > .grid > *:nth-child(4), .screen > .stack > *:nth-child(4) { animation-delay: .15s; }
+.app-nav button { transition: background var(--t-fast, .15s), color var(--t-fast, .15s), box-shadow .25s var(--ease); }
+.ep-btn { transition: transform .12s var(--ease), background .15s, border-color .15s, box-shadow .2s; }
+.ep-btn:not(:disabled):hover { transform: translateY(-1px); } .ep-btn:not(:disabled):active { transform: translateY(1px) scale(.98); }
+.ep-btn--primary:not(:disabled) { box-shadow: 0 6px 18px -8px var(--accent); }
+.ep-meter__bar i { transition: width .7s var(--ease); } .ep-meter__delta { animation: pop .5s var(--ease) both; display: inline-block; }
+.ep-meter { transition: border-color .3s; }
+.ep-table tbody tr { transition: background .15s; }
+.stat, .sqbar > div { transition: transform .2s var(--ease); } .stat:hover { transform: translateY(-2px); }
+.sqbar__n b { display: inline-block; }
+.steps li.now button { position: relative; } .steps li.now .num { animation: pulse 1.6s ease-in-out infinite; color: var(--accent-ink, var(--accent)); font-weight: 700; }
+.fxlist li, .plain li { animation: fade .4s both; }
+.actc { transition: border-color .2s, transform .2s var(--ease), opacity .3s; } .actc:not(.used):hover { border-color: var(--line-strong); transform: translateX(3px); }
+.ev { animation: rise .4s var(--ease) both; } .ev--done { animation: settle .9s ease-out; }
+.ev__opts button { transition: transform .15s var(--ease), border-color .15s, background .15s; } .ev__opts button:hover { transform: translateY(-2px); background: var(--surface-3); }
+.drawer { animation: slideIn .28s var(--ease) both; } .modal { animation: fade .2s both; } .modal__box { animation: zoomIn .26s var(--ease) both; }
+.odds i { transition: flex .6s var(--ease); }
+.pp { transition: transform .4s var(--ease); touch-action: none; cursor: grab; } .pp.drag { transition: none; cursor: grabbing; }
+.pp circle { transition: fill .2s, stroke .2s, r .2s; } .pp:hover circle { r: 33; } .pp.drag circle { r: 35; filter: drop-shadow(0 8px 10px rgba(0,0,0,.45)); }
+.bench li > button:first-child { transition: background .15s, transform .15s var(--ease); } .bench li > button:first-child:hover { background: var(--surface-3); transform: translateX(2px); }
+.final b { display: inline-block; animation: pop .6s var(--ease) both; }
+.nota { display: inline-block; animation: pop .45s var(--ease) both; }
+.tbl tr.me td { transition: background .3s; }
+.cal li.now { animation: fade .6s both; }
+
+/* Inicio */
+.inicio { position: relative; }
+.inicio__bg { position: fixed; inset: -10%; z-index: -1; pointer-events: none; opacity: .55; animation: drift 26s ease-in-out infinite alternate;
+  background:
+    radial-gradient(60% 50% at 78% 18%, color-mix(in srgb, var(--pitch) 55%, transparent), transparent 70%),
+    radial-gradient(40% 40% at 12% 85%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    repeating-linear-gradient(90deg, transparent 0 84px, color-mix(in srgb, var(--text) 4%, transparent) 84px 168px); }
+.inicio__hero h1 { animation: rise .6s var(--ease) both; } .inicio__hero p { animation: rise .6s .08s var(--ease) both; } .inicio__grid { animation: rise .6s .16s var(--ease) both; }
+.team { transition: transform .16s var(--ease), border-color .16s, background .16s, box-shadow .2s; } .team:hover { transform: translateX(4px); }
+.offer { animation: zoomIn .3s var(--ease) both; }
+
+/* Partido */
+.sb { position: relative; overflow: hidden; } .sb__score { display: inline-block; animation: pop .5s var(--ease) both; }
+.sb__bar { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--accent); transition: width 1s linear; }
+.sb--goal { background: linear-gradient(100deg, var(--surface-1) 30%, color-mix(in srgb, var(--accent) 30%, var(--surface-1)) 50%, var(--surface-1) 70%); background-size: 60% 100%; background-repeat: no-repeat; animation: sweep 1.3s ease-out; }
+.cancha__banner { animation: bannerIn .25s var(--ease) both; }
+.cancha__goal { position: absolute; left: 50%; top: 46%; display: grid; justify-items: center; gap: 2px; pointer-events: none; animation: goalIn 2.6s var(--ease) both; text-shadow: 0 4px 18px rgba(0,0,0,.6); color: #fff; }
+.cancha__goal b { font-size: clamp(44px, 9vw, 110px); font-weight: 800; font-stretch: 72%; line-height: .9; letter-spacing: .01em; }
+.cancha__goal span { font-size: clamp(14px, 1.6vw, 20px); font-weight: 600; background: rgba(10,12,14,.7); padding: 4px 14px; border-radius: var(--r-pill); }
+.cancha__goal.mine b { color: var(--accent); -webkit-text-stroke: 2px #fff; paint-order: stroke fill; }
+.cancha__over { animation: fade .3s both; } .over { animation: zoomIn .3s var(--ease) both; }
+.feed li { animation: rise .3s var(--ease) both; } .feed li.gol { animation: pop .5s var(--ease) both; }
+.sta i { transition: width .8s linear; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+.sb .nat:first-child { justify-self: end; }

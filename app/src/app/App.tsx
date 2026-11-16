@@ -48,7 +48,9 @@ export default function App() {
         {toggle}
       </header>
       <main className="app-main">
+        <div className="screen" key={`${st.view}:${g.ph}:${g.md}:${g.stop}`}>
         {g.ph === 'fin' ? <Fin g={g} /> : st.view === 'despacho' ? <Despacho g={g} /> : st.view === 'entre' ? <EntreFechas g={g} /> : st.view === 'lista' ? <Convocatoria g={g} /> : st.view === 'fecha' ? <Fecha g={g} /> : st.view === 'torneos' ? <Torneos g={g} /> : <Oficina g={g} />}
+        </div>
       </main>
       <PhoneDock count={unread}>
         <Phone title="Mensajes" count={unread} filters={unread ? <Button size="sm" variant="ghost" onClick={() => act(x => x.inbox.forEach(m => (m.read = true)))}>Marcar leídos</Button> : undefined}>

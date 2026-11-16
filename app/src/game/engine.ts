@@ -8,7 +8,7 @@ export interface TeamIn { code: string; name: string; xi: PIn[]; bench: PIn[]; t
 export interface MatchInit { home: TeamIn; away: TeamIn; seed: number; ko: boolean }
 export interface MEvent { min: number; type: 'gol' | 'amarilla' | 'roja' | 'cambio' | 'ocasion' | 'lesion' | 'info' | 'penal'; team: number; text: string; pid?: number }
 export type Cmd = { type: 'sub'; team: number; out: number; in: number } | { type: 'tac'; team: number; tac: Tactics } | { type: 'talk'; team: number; k: number } | { type: 'resume' };
-export interface Frame { t: number; min: number; score: [number, number]; ball: [number, number, number]; pos: number[]; owner: number; banner: string; phase: string; sta: number[] }
+export interface Frame { t: number; min: number; score: [number, number]; ball: [number, number, number]; pos: number[]; owner: number; banner: string; phase: string; sta: number[]; shot: boolean }
 export interface Result { gh: number; ga: number; pens?: [number, number]; events: MEvent[]; rating: Record<number, number>; stats: number[][]; played: number[]; injured: number[]; cards: Record<number, string>; scorers: { id: number; min: number; team: number }[] }
 
 interface MP extends PIn { team: number; slot: number; role: Pos; sx: number; sy: number; x: number; y: number; vx: number; vy: number; sta: number; on: boolean; yel: number; rate: number; cool: number; ox: number; oy: number; hurt: boolean }
@@ -20,8 +20,8 @@ export class Match {
   r: Rng; t = 0; phase: 'juego' | 'ht' | 'fin' | 'penales' = 'juego'; period = 0;
   teams: TeamIn[]; ps: MP[] = []; bench: PIn[][]; subs = [0, 0]; used: number[][] = [[], []];
   score: [number, number] = [0, 0]; events: MEvent[] = []; pens?: [number, number];
-  // posesión, tiros, al arco, córners, faltas, pases, pases buenos
-  stats = [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]];
+  // posesión, tiros, al arco, córners, faltas, pases, pases buenos, fueras de juego
+  stats = [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]];
   ball = { x: W / 2, y: H / 2, z: 0, vx: 0, vy: 0, owner: -1, last: -1, state: 'dead' as 'held' | 'fly' | 'loose' | 'dead', tx: 0, ty: 0, air: false, shot: null as null | { goal: boolean; save: boolean; by: number; xg: number }, to: -1, dur: 0, age: 0 };
   restart: { type: string; team: number; at: number } | null = null;
   banner = ''; think = 0; pressers: number[][] = [[], []]; pressAt = 0; poss = 0;
@@ -91,6 +91,11 @@ export class Match {
   // --- acciones con pelota ---
   private pass(from: MP, to: MP, air = false) {
     const b = this.ball, d = dist(from.x, from.y, to.x, to.y), pas = this.at(from, PAS);
+    const tx0 = this.tx(from.team, to.x), fx0 = this.tx(from.team, from.x);
+    if (b.state === 'held' && tx0 > fx0 + 6 && tx0 > W / 2 + 4 && tx0 > this.offsideLine(from.team) - 1.1 && LINE[to.role] === 'DEL' && this.r() < 0.16) {
+      this.stats[7][1 - from.team]++; this.ev('info', from.team, `Fuera de juego de ${to.n}`, to.id);
+      this.setDead('fk', 1 - from.team, to.x, to.y, 2); this.banner = `Fuera de juego · ${this.name(from.team)}`; return;
+    }
     const press = this.nearestOpp(from);
     const err = (1 - pas / 115) * d * (air ? 0.13 : 0.075) * (press < 2 ? 1.5 : 1);
     const speed = air ? 17 : 15.5, time = d / speed;
@@ -435,7 +440,7 @@ export class Match {
     const b = this.ball;
     return {
       t: this.t, min: this.min, score: [this.score[0], this.score[1]], ball: [b.x, b.y, b.z], owner: b.state === 'held' ? b.owner : -1, banner: this.banner, phase: this.phase,
-      pos: this.ps.flatMap(p => (p.on ? [p.x, p.y] : [-9, -9])), sta: this.ps.map(p => p.sta),
+      pos: this.ps.flatMap(p => (p.on ? [p.x, p.y] : [-9, -9])), sta: this.ps.map(p => p.sta), shot: !!b.shot,
     };
   }
   roster() { return this.ps.map(p => ({ id: p.id, n: p.n, team: p.team, role: p.role, on: p.on, yel: p.yel, hurt: p.hurt, rate: Math.round(clamp(p.rate, 3, 10) * 10) / 10, sta: p.sta })); }

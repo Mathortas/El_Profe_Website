@@ -122,6 +122,79 @@ export const EVENTS: Ev[] = [
       { t: 'Explicarle su lugar en el plan', hint: 'Mantienes la relación. Te comprometes a tenerlo en cuenta.', run: (_, c) => { rel(c.p, 7); return `${c.p!.n} se fue conforme con la explicación.`; } },
       { t: 'Decirle que el lugar se gana', hint: 'Sin promesas. Puede enfriarse.', run: (_, c) => { rel(c.p, -6); return `${c.p!.n} escuchó en silencio y se fue al aeropuerto.`; } },
     ] },
+  { id: 'medico-regreso', at: 'entre', place: 'Informe médico', who: g => poolOf(g, g.me).filter(p => p.inj === 1 && p.ret === 0).sort((a, b) => b.ovr - a.ovr)[0], cond: g => poolOf(g, g.me).some(p => p.inj === 1 && p.ovr >= star(g).ovr - 5), title: c => `${c.p!.n} quiere llegar a la fecha`,
+    text: (_, c) => `Le falta poco para el alta. ${c.p!.n} dice que se siente bien; el médico prefiere esperar.`,
+    opts: [
+      { t: 'Acelerar su regreso', hint: 'Lo tienes disponible. Si recae, la baja será más larga.', run: (_, c) => { if (c.r() < 0.65) { c.p!.inj = 0; return `Pasó las pruebas. ${c.p!.n} está disponible, aunque sin ritmo.`; } c.p!.inj = 3; return `Sintió un pinchazo en la última práctica. ${c.p!.n} estará fuera tres fechas.`; } },
+      { t: 'Seguir el plazo del médico', hint: 'Se pierde esta fecha. Vuelve sin riesgo.', run: (_, c) => { rel(c.p, -2); return `${c.p!.n} lo aceptó a regañadientes. Su club agradeció la prudencia.`; } },
+    ] },
+  { id: 'elecciones', at: 'entre', place: 'Federación', once: true, cond: g => g.stop >= 5 && g.stop <= 12, title: () => 'Elecciones en la federación',
+    text: () => 'El presidente busca la reelección y un opositor promete revisar todos los contratos, incluido el suyo. Los dos le piden un gesto.',
+    opts: [
+      { t: 'Apoyar al presidente actual', hint: 'Si gana, quedas fuerte. Si pierde, empiezas mal con el nuevo.', run: (g, c) => { if (c.r() < 0.6) { M(g, { fed: 10 }); return 'Ganó la reelección. En el brindis lo nombró como parte del proyecto.'; } M(g, { fed: -12 }); return 'Ganó el opositor. Su primera frase fue que nadie tiene el puesto asegurado.'; } },
+      { t: 'Mantenerse al margen', hint: 'Sin riesgo. Nadie le debe nada.', run: g => { M(g, { fed: -2, prensa: 2 }); return 'Dijo que su trabajo es la cancha. La prensa lo tomó bien.'; } },
+      { t: 'Reunirse con los dos', hint: 'Queda bien con ambos si no se filtra.', run: (g, c) => { if (c.r() < 0.7) { M(g, { fed: 4 }); return 'Las dos reuniones fueron reservadas. Gane quien gane, lo conocen.'; } M(g, { fed: -5, prensa: -3 }); return 'Se filtró una foto de la segunda reunión. Ninguno de los dos quedó contento.'; } },
+    ] },
+  { id: 'oferta', at: 'entre', place: 'Llamada inesperada', once: true, cond: g => g.meters.fed >= 62 && g.record.pj >= 10 && g.record.g >= g.record.p, title: () => 'Otra selección pregunta por usted',
+    text: () => 'Un intermediario dice que una federación más grande lo tiene en carpeta. Todavía no es una oferta formal.',
+    opts: [
+      { t: 'Descartarlo en público', hint: 'La gente lo valora. Pierde una carta para negociar.', run: g => { M(g, { hinchas: 6, vestuario: 3 }); return 'Dijo que su compromiso es con este grupo. La frase fue tapa de los diarios.'; } },
+      { t: 'Usarlo para pedir mejores condiciones', hint: 'La federación cede algo. A los hinchas no les gusta.', run: g => { M(g, { fed: 4, hinchas: -5 }); return 'La federación mejoró los recursos del cuerpo técnico. En la calle se habló de falta de compromiso.'; } },
+    ] },
+  { id: 'sub20', at: 'entre', place: 'Selecciones juveniles', who: kid, cond: g => !!kid(g) && kid(g)!.ovr >= 60, title: c => `El técnico de la sub-20 pide a ${c.p!.n}`,
+    text: (_, c) => `Hay torneo juvenil y quiere contar con ${c.p!.n}. Usted también lo tiene en el radar para la mayor.`,
+    opts: [
+      { t: 'Dejarlo con la sub-20', hint: 'Juega y crece. No lo tienes en esta fecha.', run: (_, c) => { c.p!.sus = Math.max(c.p!.sus, 1); c.p!.seen = 1; c.p!.pot = Math.min(96, c.p!.pot + 1); return `${c.p!.n} fue figura del torneo juvenil. Ahora lo conoces a fondo.`; } },
+      { t: 'Subirlo a la mayor', hint: 'Lo tienes disponible. Entrena con los grandes, juega poco.', run: (_, c) => { rel(c.p, 6); return `${c.p!.n} se entrena con la mayor. El técnico de la sub-20 no quedó contento.`; } },
+    ] },
+  { id: 'hinchas-piden', at: 'lista', place: 'En las redes', who: g => pool(g).filter(p => p.form === 2 && !g.squad.includes(p.id)).sort((a, b) => b.ovr - a.ovr)[0], cond: g => pool(g).some(p => p.form === 2 && !g.squad.includes(p.id)), title: c => `La gente pide a ${c.p!.n}`,
+    text: () => `Viene en gran nivel en su club y no está en la lista. Su nombre es tendencia desde el anuncio.`,
+    opts: [
+      { t: 'Sumarlo a la lista', hint: 'Cedes ante la presión. Tienes un jugador en racha.', run: (g, c) => { if (g.squad.length < 26) g.squad.push(c.p!.id); M(g, { hinchas: 4, prensa: -1 }); return `${c.p!.n} fue convocado de última hora.`; } },
+      { t: 'Mantener la lista', hint: 'Sostienes tu criterio. La presión sigue si los resultados no llegan.', run: g => { M(g, { hinchas: -2 }); return 'La lista quedó como estaba.'; } },
+    ] },
+  { id: 'cinta', at: 'concentracion', place: 'Antes del primer partido', once: true, cond: g => squad(g).filter(p => p.per[3] >= 14).length >= 2 && g.md === 0, title: () => 'Dos referentes y una sola cinta',
+    text: () => 'El capitán histórico y la figura del momento esperan llevarla. El grupo mira qué decide.',
+    opts: [
+      { t: 'Respetar la antigüedad', hint: 'Orden y calma. La figura lo siente.', run: g => { M(g, { vestuario: 3 }); rel(star(g), -5); return 'La cinta sigue donde estaba. La figura lo aceptó sin sonreír.'; } },
+      { t: 'Dársela al mejor jugador', hint: 'Mensaje de renovación. Algún histórico se enfría.', run: g => { g.lineup.cap = star(g).id; rel(star(g), 8); M(g, { vestuario: -2, prensa: 3 }); return 'Hay capitán nuevo. La prensa habló de cambio de época.'; } },
+    ] },
+  { id: 'dron', at: 'concentracion', place: 'En el entrenamiento', cond: g => stop(g).comp !== 'AM', title: () => 'Un dron sobre la práctica',
+    text: () => 'Sobrevoló la cancha diez minutos mientras ensayaban la pelota parada. Nadie sabe de quién es.',
+    opts: [
+      { t: 'Cambiar las jugadas ensayadas', hint: 'Sorprendes igual. Pierdes horas de trabajo.', run: g => { M(g, { quimica: -2 }); g.scout = true; return 'Rearmaron la pelota parada a puertas cerradas.'; } },
+      { t: 'Seguir con el plan', hint: 'No pierdes tiempo. Quizá ya te conocen las jugadas.', run: (g, c) => { if (c.r() < 0.4) { M(g, { vestuario: -2 }); return 'En el partido, el rival pareció adivinar cada movimiento.'; } return 'No pasó nada. Probablemente era un curioso.'; } },
+    ] },
+  { id: 'penales', at: 'concentracion', place: 'Última práctica', cond: g => !!g.fx[g.md]?.ko, title: () => 'Mañana puede haber penales',
+    text: () => 'El partido es de eliminación directa. El cuerpo técnico pregunta si dedican la última práctica a patear.',
+    opts: [
+      { t: 'Practicar penales', hint: 'Llegan con confianza a una tanda. Menos descanso.', run: g => { M(g, { vestuario: 2 }); return 'Patearon cinco cada uno. El arquero atajó varios y se fue agrandado.'; } },
+      { t: 'Descanso y video', hint: 'Piernas frescas. Si hay tanda, se improvisa.', run: g => { M(g, { quimica: 1 }); return 'Sesión corta y a descansar.'; } },
+    ] },
+  { id: 'familias', at: 'concentracion', place: 'En el hotel', once: true, cond: g => stop(g).kind === 'torneo' && g.md >= 2, title: () => 'Piden un día con las familias',
+    text: () => 'Llevan semanas concentrados. Los referentes proponen abrir el hotel una tarde.',
+    opts: [
+      { t: 'Abrir el hotel', hint: 'Se recargan. Se rompe la rutina un día.', run: g => { M(g, { vestuario: 6 }); return 'Fue una tarde larga, con chicos corriendo por los pasillos. Al otro día se entrenó con otra energía.'; } },
+      { t: 'Mantener la concentración cerrada', hint: 'Foco total. El cansancio mental se acumula.', run: g => { M(g, { vestuario: -4, quimica: 1 }); return 'Nadie protestó en voz alta.'; } },
+    ] },
+  { id: 'figura', at: 'post', place: 'Zona mixta', who: g => { const l = lastLog(g); if (!l) return undefined; const id = Object.entries(l.rating).sort((a, b) => b[1] - a[1])[0]?.[0]; return g.players.find(p => p.id === Number(id) && p.nat === g.me); }, cond: g => !!lastLog(g) && lastLog(g).my > lastLog(g).their && Math.max(...Object.values(lastLog(g).rating)) >= 8, title: c => `Todos preguntan por ${c.p!.n}`,
+    text: (_, c) => `Fue la figura del partido. Los periodistas quieren saber si ${c.p!.n} ya es el dueño del equipo.`,
+    opts: [
+      { t: 'Elogiarlo sin reservas', hint: 'Se agranda. El resto escucha.', run: (g, c) => { rel(c.p, 8); c.p!.form = Math.min(2, c.p!.form + 1); M(g, { vestuario: -1, prensa: 2 }); return `"Hoy jugó como los grandes", dijo. ${c.p!.n} se fue con una sonrisa.`; } },
+      { t: 'Hablar del equipo', hint: 'Cuida al grupo. Él esperaba otra cosa.', run: (g, c) => { rel(c.p, -2); M(g, { vestuario: 3 }); return 'Repartió el mérito entre todos.'; } },
+    ] },
+  { id: 'arbitraje', at: 'post', place: 'Conferencia de prensa', cond: g => !!lastLog(g) && lastLog(g).their - lastLog(g).my === 1 && lastLog(g).fx.comp !== 'AM', title: () => 'Un fallo que cambió el partido',
+    text: () => 'El plantel está furioso con el árbitro. Le preguntan qué opina.',
+    opts: [
+      { t: 'Criticar el arbitraje', hint: 'El grupo se siente defendido. Puede haber sanción.', run: (g, c) => { M(g, { vestuario: 4, hinchas: 3 }); if (c.r() < 0.4) { M(g, { fed: -4 }); return 'La confederación abrió un expediente. La federación tuvo que pagar una multa.'; } return 'Dijo lo que todos pensaban. No hubo consecuencias.'; } },
+      { t: 'No hablar de los árbitros', hint: 'Sin riesgo. El vestuario esperaba más.', run: g => { M(g, { vestuario: -2, prensa: 1 }); return 'Evitó el tema. Puertas adentro, algunos lo comentaron.'; } },
+    ] },
+  { id: 'queja-micro', at: 'entre', place: 'Carta de los clubes', cond: g => g.meters.clubes < 42, title: () => 'Los clubes locales protestan',
+    text: () => 'Varios técnicos firmaron una carta: dicen que la selección les desarma la semana y no les avisa con tiempo.',
+    opts: [
+      { t: 'Acordar un calendario con ellos', hint: 'Mejora el trato. Menos libertad para citar.', run: g => { M(g, { clubes: 10 }); g.actsLeft = Math.max(0, g.actsLeft - 1); return 'Firmaron un calendario común. Le costó una jornada de reuniones.'; } },
+      { t: 'Responder que la selección es prioridad', hint: 'No cedes nada. La relación empeora.', run: g => { M(g, { clubes: -6, hinchas: 2 }); return 'La respuesta salió en todos lados. Los clubes tomaron nota.'; } },
+    ] },
 ];
 
 export function drawEvents(g: Game, at: At, r: Rng): Pending[] {

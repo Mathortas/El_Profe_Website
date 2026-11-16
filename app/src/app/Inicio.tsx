@@ -16,7 +16,7 @@ export function Inicio({ toggle }: { toggle: ReactNode }) {
   const sel = teams.find(t => t.c === pick)!, idx = teams.indexOf(sel);
   const goal = HOSTS_2030.includes(pick) ? 'Terminar entre los cuatro primeros de las eliminatorias' : idx <= 5 ? 'Clasificar al Mundial 2030' : idx <= 7 ? 'Terminar entre los seis primeros de las eliminatorias' : 'Sumar al menos 15 puntos en las eliminatorias';
   return (
-    <div className="inicio">
+    <div className="inicio"><div className="inicio__bg" aria-hidden="true" />
       <header className="inicio__top"><b className="logo">El Profe</b>{toggle}</header>
       <div className="inicio__hero">
         <h1>Septiembre de 2026.<br />Empieza un ciclo nuevo.</h1>
@@ -31,7 +31,7 @@ export function Inicio({ toggle }: { toggle: ReactNode }) {
             </button>
           ))}
         </div>
-        <section className="offer">
+        <section className="offer" key={pick}>
           <div className="offer__head"><Crest iso={sel.iso} /><div><h2>{sel.n}</h2><span className="muted">Puesto {sel.rank} del ranking FIFA · nivel {sel.str}</span></div></div>
           <dl>
             <dt>Objetivo del ciclo</dt><dd>{goal}</dd>
