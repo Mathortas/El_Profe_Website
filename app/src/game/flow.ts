@@ -1,10 +1,11 @@
 // El recorrido del juego: partida nueva, fechas, convocatoria, partidos y cierre.
-import { type Fx, type Game, type Lineup, type Msg, type P, type Tactics, LINE, ageOf, clamp, gauss, hash, pick, rngFor } from './core.ts';
-import { CONMEBOL, FORMS, HOSTS_2030, altitudeEdge, homeAltitude, venueOf } from './data.ts';
-import { type RawWorld, available, bestXI, buildPlayers, clubsFrom, effective, poolOf, refreshStrengths, rollYear, urnsFrom, youthOf } from './players.ts';
+import { type Fx, type Game, type Lineup, type Msg, type Order, type P, type Tactics, LINE, ageOf, clamp, gauss, hash, pick, rngFor } from './core.ts';
+import { CONMEBOL, FORMS, HOSTS_2030, abroad, altitudeEdge, homeAltitude, venueOf } from './data.ts';
+import { type RawWorld, available, bestXI, buildPlayers, clubsFrom, effective, fresh, poolOf, refreshStrengths, rollYear, urnsFrom, youthOf } from './players.ts';
 import { createTour, elimSlots, elimTable, fixturesFor, myTourMatch, odds, playStage, qualify, quick, rank, rankOf, roundRobin, stopLabel, stopsFor, tourFx, winnerOf } from './world.ts';
 import type { MatchInit, PIn, Result, TeamIn } from './engine.ts';
 import { checkPromises, drawEvents } from './events.ts';
+import { SAVE_V } from './save.ts';
 
 let CLUBS: Record<string, string[]> = {}, URNS: Record<string, [string[], string[]]> = {};
 export let LEAGUES: Record<string, [string, string]> = {};
@@ -33,8 +34,8 @@ export function newGame(raw: RawWorld, me: string, dt: string, seed: number): Ga
   const nations: Game['nations'] = {};
   for (const [c, n, iso, conf, rk] of raw.nations) nations[c] = { c, n, iso, conf, pts: Math.round(1880 * Math.exp(-0.0045 * (rk - 1))), str: 60, youth: 40 };
   const g: Game = {
-    v: 1, seed, me, dt, started: Date.now(), cycle: 2026, stops: stopsFor(2026), stop: 0, md: 0, ph: 'entre',
-    players: buildPlayers(raw, seed), nations, squad: [], lineup: { xi: [], bench: [], cap: 0, pk: 0, tac: { form: '4-3-3', ment: 2, pres: 1, linea: 1, ancho: 1, ritmo: 1 } }, fx: [],
+    v: SAVE_V, seed, me, dt, started: Date.now(), cycle: 2026, stops: stopsFor(2026), stop: 0, md: 0, ph: 'entre',
+    players: buildPlayers(raw, seed), nations, squad: [], lineup: { xi: [], bench: [], cap: 0, pk: 0, tac: { form: '4-3-3', ment: 2, pres: 1, linea: 1, ancho: 1, ritmo: 1, estilo: 0, corner: 0, ord: {} } }, fx: [],
     elim: { rounds: [], res: [], done: 0 }, tour: null, qualified: null,
     meters: { fed: 55, prensa: 50, hinchas: 55, vestuario: 60, clubes: 50, quimica: 40 }, delta: {}, goal: '', goalKey: '',
     acts: [], actsLeft: 3, scout: false, inbox: [], pending: [], seenEv: [], promises: [], log: [], history: [],
@@ -61,6 +62,7 @@ export function startStop(g: Game, first = false) {
     mt.fed += Math.round((55 - mt.fed) * 0.04); mt.quimica = Math.max(20, mt.quimica - 5); mt.clubes += Math.round((50 - mt.clubes) * 0.06);
     const top = new Set(myPool(g).sort((a, b) => b.ovr - a.ovr).slice(0, 34).map(p => p.id));
     for (const p of myPool(g)) {
+      p.fat = 0;
       p.form = clamp(Math.round(p.form * 0.5 + gauss(r) * 0.9 + (p.mins - 0.5) * 1.2), -2, 2);
       if (p.inj > 0) { p.inj--; if (p.inj === 0 && top.has(p.id)) mail(g, 'med', 'Cuerpo médico', `${p.n} recibió el alta y vuelve a estar disponible.`); }
       else if (r() < 0.045) { p.inj = 1 + Math.floor(r() * 3); p.injWhat = pick(r, INJ); if (top.has(p.id)) mail(g, 'med', 'Cuerpo médico', `${p.n}: ${p.injWhat.toLowerCase()} en su club. Baja estimada: ${p.inj === 1 ? 'esta fecha' : `${p.inj} fechas`}.`); }
@@ -73,7 +75,7 @@ export function startStop(g: Game, first = false) {
   } else g.fx = fixturesFor(g, s);
   g.squad = g.squad.filter(id => { const p = g.players.find(x => x.id === id); return p && available(p); });
   const rivals = g.fx.map(f => nat(g, f.h === g.me ? f.a : f.h).n);
-  const what = s.kind === 'torneo' && g.tour?.teams.includes(g.me) ? `empieza ${s.comp === 'CA' ? 'la Copa América' : 'el Mundial'}; debutamos contra ${rivals[0]}` : `nos esperan ${rivals.join(', ').replace(/, ([^,]*)$/, ' y $1')}`;
+  const what = s.kind === 'torneo' && g.tour?.teams.includes(g.me) ? `empieza ${s.comp === 'CA' ? 'la Copa América' : 'el Mundial'}; debutamos contra ${rivals[0]}` : `nos esperan ${rivals.join(', ').replace(/, ([^,]*)$/, (_, last: string) => `${/^(i|hi)/i.test(last) ? ' e ' : ' y '}${last}`)}`;
   mail(g, 'fed', 'Federación', `Estimado profesor: en ${s.m.toLowerCase()} ${what}. Quedamos atentos a su lista.`);
   g.pending.push(...drawEvents(g, 'entre', r));
 }
@@ -90,9 +92,9 @@ export const ACTS: Act[] = [
 export function doAct(g: Game, id: string, staff: boolean) {
   if (g.acts.includes(id) || (!staff && g.actsLeft <= 0) || (staff && g.acts.includes('*'))) return;
   const k = staff ? 0.5 : 1, pool = myPool(g), r = rngFor(g, `accion:${g.stop}:${id}`);
-  if (id === 'gira') for (const p of pool) if (p.lg) { p.rel = clamp(p.rel + 8 * k, 0, 100); }
+  if (id === 'gira') for (const p of pool) if (abroad(p)) { p.rel = clamp(p.rel + 8 * k, 0, 100); }
   if (id === 'clubes') { bump(g, { clubes: 8 * k }); pool.filter(p => p.gen).slice(0, 3).forEach(p => (p.seen = Math.min(1, p.seen + 0.3))); }
-  if (id === 'micro') { const ok = g.meters.clubes >= 45; bump(g, { quimica: (ok ? 6 : 4) * k, clubes: ok ? 0 : -5 }); for (const p of pool) if (!p.lg && r() < 0.3) p.form = Math.min(2, p.form + 1); }
+  if (id === 'micro') { const ok = g.meters.clubes >= 45; bump(g, { quimica: (ok ? 6 : 4) * k, clubes: ok ? 0 : -5 }); for (const p of pool) if (!abroad(p) && r() < 0.3) p.form = Math.min(2, p.form + 1); }
   if (id === 'rival') g.scout = true;
   if (id === 'juveniles') for (const p of pool) { if (p.gen) p.seen = Math.min(1, p.seen + 0.35 * k); if (ageOf(p, curStop(g).y) <= 21) p.rel = clamp(p.rel + 4 * k, 0, 100); }
   if (id === 'fede') bump(g, { fed: 3 * k });
@@ -131,7 +133,10 @@ export function autoLineup(g: Game, form = g.lineup.tac.form) {
   const on = xi.map(id => m.get(id)!).filter(Boolean);
   const cap = [...on].sort((a, b) => b.per[3] * 3 + b.caps / 4 - (a.per[3] * 3 + a.caps / 4))[0]?.id ?? 0;
   const pk = [...on].sort((a, b) => b.six[1] - a.six[1])[0]?.id ?? 0;
-  g.lineup = { xi, bench: rest.map(p => p.id), cap: g.lineup.xi.includes(g.lineup.cap) && xi.includes(g.lineup.cap) ? g.lineup.cap : cap, pk, tac: { ...g.lineup.tac, form } };
+  const field = on.filter(p => p.pos !== 'POR'), keep = (id?: number) => (id && xi.includes(id) ? id : 0);
+  const fk = keep(g.lineup.fk) || ([...field].sort((a, b) => b.six[1] + b.six[2] - (a.six[1] + a.six[2]))[0]?.id ?? 0);
+  const ck = keep(g.lineup.ck) || ([...field].sort((a, b) => b.six[2] - a.six[2])[0]?.id ?? 0);
+  g.lineup = { xi, bench: rest.map(p => p.id), cap: g.lineup.xi.includes(g.lineup.cap) && xi.includes(g.lineup.cap) ? g.lineup.cap : cap, pk, fk, ck, tac: { ...g.lineup.tac, form } };
 }
 export function swapLineup(g: Game, a: number, b: number) {
   const L = g.lineup, ia = L.xi.indexOf(a), ib = L.xi.indexOf(b), ba = L.bench.indexOf(a), bb = L.bench.indexOf(b);
@@ -139,22 +144,57 @@ export function swapLineup(g: Game, a: number, b: number) {
   else if (ia >= 0 && bb >= 0) { L.xi[ia] = b; L.bench[bb] = a; }
   else if (ib >= 0 && ba >= 0) { L.xi[ib] = a; L.bench[ba] = b; }
   if (!L.xi.includes(L.cap)) L.cap = L.xi[0]; if (!L.xi.includes(L.pk)) L.pk = L.xi[L.xi.length - 1];
+  if (L.fk && !L.xi.includes(L.fk)) L.fk = 0; if (L.ck && !L.xi.includes(L.ck)) L.ck = 0;
 }
 export function lineupOk(g: Game) { const m = byId(g); return g.lineup.xi.length === 11 && g.lineup.xi.every(id => { const p = m.get(id); return p && available(p); }); }
 
 // --- Partido ---
 const STYLES = ['4-3-3', '4-2-3-1', '4-4-2', '4-1-4-1', '3-5-2', '5-3-2'];
-const pin = (p: P, at = p.pos): PIn => ({ id: p.id, n: p.n, pos: p.pos, ovr: Math.round(effective(p, at)), six: p.six.map(v => Math.round(v * (1 + p.form * 0.015))) });
+const pin = (p: P, at = p.pos, tired = 0): PIn => ({ id: p.id, n: p.n, pos: p.pos, ovr: Math.round(effective(p, at)), six: p.six.map(v => Math.round(v * (1 + p.form * 0.015))), sta0: fresh(p) - tired });
+export const ESTILOS = ['Equilibrado', 'Contraataque', 'Posesión', 'Por las bandas', 'Juego directo'];
+/** Estilo que elige un rival según lo que tiene: velocidad arriba, un nueve fuerte, buen pie en el medio. */
+function aiStyle(on: P[], form: string, d: number): number {
+  const spots = FORMS[form], avg = (l: P[], k: number) => l.reduce((x, p) => x + p.six[k], 0) / (l.length || 1);
+  const fw = on.filter((_, i) => LINE[spots[i][0]] === 'DEL'), md = on.filter((_, i) => LINE[spots[i][0]] === 'MED');
+  const nine = Math.max(0, ...fw.map(p => p.six[5]));
+  if (d < -5) return avg(fw, 0) >= 78 || nine < 80 ? 1 : 4;
+  if (d > 4 && avg(md, 2) >= 78) return 2;
+  if (nine >= 82 && avg(md, 2) < 76) return 4;
+  if (nine >= 78 && fw.length >= 3) return 3;
+  return avg(fw, 0) >= 82 ? 1 : 0;
+}
 function aiTeam(g: Game, code: string, rival: string): TeamIn {
   const pool = poolOf(g, code).filter(available), form = STYLES[hash(code) % 4], spots = FORMS[form], m = new Map(pool.map(p => [p.id, p]));
   const xi = bestXI(pool, form), d = nat(g, code).str - nat(g, rival).str;
   const bench = pool.filter(p => !xi.includes(p.id)).sort((a, b) => b.ovr - a.ovr).slice(0, 12);
-  return { code, name: nat(g, code).n, xi: xi.map((id, i) => pin(m.get(id)!, spots[i][0])), bench: bench.map(p => pin(p)), tac: { form, ment: d > 6 ? 3 : d < -6 ? 1 : 2, pres: d > 4 ? 2 : 1, linea: d > 4 ? 2 : d < -6 ? 0 : 1, ancho: 1, ritmo: 1 }, boost: 1, drain: 1, ai: true };
+  const ment = d > 6 ? 3 : d < -6 ? 1 : 2, ord: Record<number, Order[]> = {};
+  xi.forEach((id, i) => {                                                         // el rival también da indicaciones a sus figuras
+    const p = m.get(id); if (!p) return; const role = spots[i][0], o: Order[] = [];
+    if ((role === 'LI' || role === 'LD') && ment >= 3) o.push('sube');
+    if ((role === 'LI' || role === 'LD' || role === 'MCD') && ment <= 1) o.push('queda');
+    if ((role === 'EI' || role === 'ED' || role === 'MCO') && p.six[3] >= 82) o.push('encara');
+    if (p.six[1] >= 84 && role !== 'POR') o.push('tira');
+    if (role === 'MCD' && p.six[4] >= 80) o.push('fuerte');
+    if (o.length) ord[id] = o;
+  });
+  const on = xi.map(id => m.get(id)!).filter(Boolean), tired = Math.min(g.md, 3) * 0.05;          // el rival también llega con partidos encima
+  const estilo = aiStyle(on, form, d);
+  return {
+    code, name: nat(g, code).n, xi: xi.map((id, i) => pin(m.get(id)!, spots[i][0], tired)), bench: bench.map(p => pin(p)),
+    tac: { form, ment, pres: d > 4 ? 2 : estilo === 1 ? 0 : 1, linea: d > 4 ? 2 : d < -6 || estilo === 1 ? 0 : 1, ancho: estilo === 3 ? 2 : 1, ritmo: estilo === 4 || estilo === 1 ? 2 : estilo === 2 ? 0 : 1, corner: hash(code + 'ck') % 3, estilo, ord },
+    boost: 1, drain: 1, ai: true,
+  };
+}
+/** Lo que se sabe del rival antes de jugar: formación, once probable y, si se lo estudió, cómo juega. */
+export function rivalPlan(g: Game) {
+  const fx = curFx(g); if (!fx) return null;
+  const t = aiTeam(g, fx.h === g.me ? fx.a : fx.h, g.me), spots = FORMS[t.tac.form];
+  return { form: t.tac.form, estilo: t.tac.estilo ?? 0, ment: t.tac.ment, linea: t.tac.linea, pres: t.tac.pres, xi: t.xi.map((p, i) => ({ id: p.id, n: p.n, role: spots[i][0], ovr: p.ovr })) };
 }
 export function matchInit(g: Game): MatchInit {
   const fx = curFx(g)!, m = byId(g), spots = FORMS[g.lineup.tac.form], iAmHome = fx.h === g.me, rival = iAmHome ? fx.a : fx.h;
   const mine: TeamIn = {
-    code: g.me, name: nat(g, g.me).n, xi: g.lineup.xi.map((id, i) => pin(m.get(id)!, spots[i][0])), bench: g.lineup.bench.map(id => pin(m.get(id)!)), tac: { ...g.lineup.tac }, pk: g.lineup.pk, ai: false, drain: 1,
+    code: g.me, name: nat(g, g.me).n, xi: g.lineup.xi.map((id, i) => pin(m.get(id)!, spots[i][0])), bench: g.lineup.bench.map(id => pin(m.get(id)!)), tac: { ...g.lineup.tac }, pk: g.lineup.pk, fk: g.lineup.fk, ck: g.lineup.ck, ai: false, drain: 1,
     boost: (1 + (g.meters.quimica - 50) / 1000) * (1 + (g.meters.vestuario - 50) / 1500) * (g.scout ? 1.012 : 1),
   };
   const other = aiTeam(g, rival, g.me), home = iAmHome ? mine : other, away = iAmHome ? other : mine;
@@ -180,6 +220,8 @@ export function finishMatch(g: Game, res: Result) {
   const rec = g.record; rec.pj++; rec.gf += my; rec.gc += their; if (v === 1 && !res.pens) rec.g++; else if (v === 0 && !res.pens) rec.p++; else rec.e++;
   const mineIds = new Set(myPool(g).map(p => p.id));
   for (const p of myPool(g)) if (p.sus > 0 && competitive && !res.played.includes(p.id)) p.sus = 0;
+  // Cansancio dentro de la fecha: el que juega acumula, el que descansa recupera.
+  for (const p of myPool(g)) p.fat = clamp((p.fat ?? 0) * 0.55 + (res.mins?.[p.id] ?? 0) * 0.35, 0, 1);
   for (const id of res.played) {
     const p = m.get(id); if (!p || !mineIds.has(id)) continue;
     const rt = res.rating[id] ?? 6;

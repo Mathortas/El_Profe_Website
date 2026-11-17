@@ -3,6 +3,7 @@ import { Megaphone, Sparkles, Trash2, UserPlus } from 'lucide-react';
 import { Button, Chip, FormArrow, Panel, PositionChip, Segmented, SortableTable, Tag, posRank, type Column, type Form } from '../design';
 import { type Game, type P, LINE, clamp, rngFor } from '../game/core.ts';
 import { SQUAD_MAX, confirmSquad, myPool, nat, suggestSquad } from '../game/flow.ts';
+import { abroad } from '../game/data.ts';
 import { available } from '../game/players.ts';
 import { act, compare, go, openPlayer } from './store.ts';
 import { Lvl, Nat, age, clubOf, known, leagueOf, money, potText, status } from './common.tsx';
@@ -15,7 +16,7 @@ export function Convocatoria({ g }: { g: Game }) {
   const editable = g.ph === 'entre' || g.ph === 'lista', inSquad = new Set(g.squad);
   const rows = useMemo(() => {
     const base = others ? g.players.filter(p => p.nat2 === g.me && p.nat !== g.me && !p.tied && p.ret === 0) : myPool(g);
-    return base.filter(p => (line === 'ALL' || LINE[p.pos] === line) && (where === 'all' || (where === 'local') === !p.lg) && (!onlyOk || available(p)) && (!u23 || age(g, p) <= 23) && (!dual || !!p.nat2) && (!q || p.n.toLowerCase().includes(q.toLowerCase())));
+    return base.filter(p => (line === 'ALL' || LINE[p.pos] === line) && (where === 'all' || (where === 'local') === !abroad(p)) && (!onlyOk || available(p)) && (!u23 || age(g, p) <= 23) && (!dual || !!p.nat2) && (!q || p.n.toLowerCase().includes(q.toLowerCase())));
     // eslint-disable-next-line
   }, [g, g.players.length, line, where, onlyOk, u23, dual, others, q, g.squad.length]);
   const sq = g.squad.map(id => g.players.find(p => p.id === id)!).filter(Boolean);
@@ -56,7 +57,7 @@ export function Convocatoria({ g }: { g: Game }) {
           <div className="sqbar__n"><b className="num">{sq.length}</b><span>/ {SQUAD_MAX} convocados</span></div>
           {(['POR', 'DEF', 'MED', 'DEL'] as const).map(l => <div key={l} className="sqbar__l"><span>{l}</span><b className="num">{count(l)}</b></div>)}
           <div className="sqbar__l"><span>Nivel medio</span><b className="num">{avg || '—'}</b></div>
-          <div className="sqbar__l"><span>Juegan afuera</span><b className="num">{sq.filter(p => p.lg).length}</b></div>
+          <div className="sqbar__l"><span>Juegan afuera</span><b className="num">{sq.filter(abroad).length}</b></div>
           <div className="sqbar__l"><span>Sub-23</span><b className="num">{sq.filter(p => age(g, p) <= 23).length}</b></div>
         </div>
         <div className="filters">

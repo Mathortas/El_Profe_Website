@@ -1,5 +1,5 @@
 import { type Game, type Nation, type P, type Pos, type Rng, ageOf, clamp, gauss, hash, pick, rngFor, rngOf } from './core.ts';
-import { FORMS, LEAGUE, LOCAL, fit } from './data.ts';
+import { FORMS, HOME, LEAGUE, LOCAL, canJoin, fit } from './data.ts';
 
 export interface RawWorld { asof: string; nations: [string, string, string, string, number][]; leagues: Record<string, [string, string]>; players: (string | number)[][] }
 
@@ -49,7 +49,9 @@ export function buildPlayers(raw: RawWorld, seed: number, year = 2026): P[] {
 export const poolOf = (g: { players: P[] }, nat: string) => g.players.filter(p => p.nat === nat && p.ret === 0);
 export const available = (p: P) => p.inj === 0 && p.sus === 0 && p.ret === 0;
 /** Nivel con el que rinde hoy: nivel, forma y encaje en el puesto. */
-export const effective = (p: P, at: Pos = p.pos) => (p.ovr + p.form * 1.3) * fit(p.pos, at);
+export const effective = (p: P, at: Pos = p.pos) => (p.ovr + p.form * 1.3) * fit(p.pos, at) * (1 - (p.fat ?? 0) * 0.1);
+/** Con cuánto físico arranca un partido según lo que jugó en la fecha. */
+export const fresh = (p: P) => 1 - (p.fat ?? 0) * 0.35;
 
 /** Mejor once posible con un grupo de jugadores para una formación. */
 export function bestXI(pool: P[], form: string): number[] {
@@ -85,7 +87,12 @@ function moveClub(p: P, r: Rng, clubs: Record<string, string[]>) {
   const want = clamp((p.ovr - 56) / 34, 0.4, 1);
   const here = p.lg ? LEAGUE[p.lg] ?? 0.6 : LOCAL[p.nat] ?? 0.5;
   if (Math.abs(want - here) < 0.12 || r() > 0.3) return;
-  const options = Object.keys(clubs).filter(l => Math.abs((LEAGUE[l] ?? 0.6) - want) < 0.1);
+  if (want < here) {                                                               // le queda grande la liga: vuelve a su país o se queda donde está
+    const home = (HOME[p.nat] ?? []).find(l => clubs[l]);
+    if (!p.lg || !home || p.lg === home) return;
+    if ((LEAGUE[home] ?? 0.6) < here) { p.lg = home; p.club = pick(r, clubs[home]); p.mins = clamp(0.55 + gauss(r) * 0.2, 0.1, 1); return; }
+  }
+  const options = Object.keys(clubs).filter(l => Math.abs((LEAGUE[l] ?? 0.6) - want) < 0.1 && canJoin(p.nat, l, p.ovr));
   if (!options.length) return;
   p.lg = pick(r, options); p.club = pick(r, clubs[p.lg]); p.mins = clamp(0.45 + gauss(r) * 0.2, 0.1, 1);
 }
@@ -131,7 +138,8 @@ export function newYouth(g: Game, nt: Nation, year: number, r: Rng, urn: [string
   const ovr = Math.round(clamp(pot - (12 + r() * 10), 40, 80));
   const name = urn && urn[0].length ? `${pick(r, urn[0])} ${pick(r, urn[1])}` : `Juvenil ${g.next}`;
   const abroad = pot > 80 && r() < 0.3 && clubs.PO1;
-  const lg = abroad ? pick(r, ['PO1', 'NL1', 'BE1', 'ES1']) : '';
+  const home = HOME[nt.c]?.[0] ?? '';
+  const lg = abroad ? pick(r, ['PO1', 'NL1', 'BE1', 'ES1']) : clubs[home] ? home : '';
   const dia = DIASPORA[nt.c];
   return {
     id: g.next++, n: name, nat: nt.c, nat2: dia && r() < 0.1 ? pick(r, dia) : '', by: year - 17, bm: 1 + Math.floor(r() * 12), pos,

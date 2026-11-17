@@ -3,6 +3,7 @@ import { useSyncExternalStore } from 'react';
 import type { Game } from '../game/core.ts';
 import type { RawWorld } from '../game/players.ts';
 import { newGame, setWorld } from '../game/flow.ts';
+import { migrate } from '../game/save.ts';
 import { kitOf } from '../game/data.ts';
 import { applyNation } from '../design/theme';
 
@@ -40,7 +41,7 @@ export async function boot() {
   const raw = (await import('../data/world.json')).default as unknown as RawWorld;
   setWorld(raw);
   let g: Game | null = null;
-  try { const s = await idb<string | undefined>('readonly', st => st.get('save')); if (s) g = JSON.parse(s) as Game; } catch { /* sin guardado */ }
+  try { const s = await idb<string | undefined>('readonly', st => st.get('save')); if (s) g = migrate(JSON.parse(s)); } catch { /* sin guardado */ }
   state = { ...state, raw, ready: true, hasSave: !!g, g: null };
   (window as unknown as { __save?: Game | null }).__save = g;
   emit();

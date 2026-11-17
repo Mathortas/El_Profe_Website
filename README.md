@@ -24,8 +24,17 @@ Abre la dirección que muestra la terminal. La partida se guarda sola en el nave
     - `engine.ts` y `worker.ts` — el motor de partido 2D, que corre en un hilo aparte.
   - `src/app/` — las pantallas.
   - `scripts/` — pruebas sin interfaz: `sim.ts` calibra el motor y `cycle.ts` juega ciclos completos.
-- `data/pipeline/build_world.py` — arma `app/src/data/world.json` desde `data/raw/transfermarkt-datasets.zip` (no se sube al repositorio).
+- `data/pipeline/build_world.py` — arma `app/src/data/world.json` desde los archivos de `data/raw/` (no se suben al repositorio).
 - `design/` — maquetas y notas de diseño.
+
+## Pruebas automáticas
+
+```
+cd app
+npm test
+```
+
+Juegan partidos y ciclos completos sin interfaz y revisan que los promedios del motor sean razonables, que el guardado se pueda cargar y actualizar, y que el planteo cambie el partido. GitHub las corre solas en cada push (`.github/workflows/pruebas.yml`).
 
 ## Pruebas rápidas
 
@@ -43,4 +52,15 @@ node --experimental-strip-types scripts/cycle.ts PER 2
 
 ## Datos
 
-Los jugadores salen de [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets), con corte al 6 de julio de 2026. Las ligas que ese conjunto no cubre (por ejemplo, la peruana) no traen club ni minutos.
+Todo sale de `data/raw/`, que no se sube al repositorio:
+
+- `transfermarkt-datasets.zip` — la base: jugadores, valores de mercado y partidos de selección de [transfermarkt-datasets](https://github.com/dcaribou/transfermarkt-datasets), con corte al 6 de julio de 2026.
+- `elprofe_fbref_2026.csv` — club, partidos y minutos de la temporada 2026 en once ligas sudamericanas, leídos de FBref el 16 de noviembre de 2026. Completa a los jugadores que ya estaban y suma a los que solo jugaron en su liga local. A estos últimos el valor se les estima con la liga, los minutos, la edad y los goles; el puesto fino (lateral, extremo, volante) se reparte a partir del puesto general.
+- `elprofe_wikidata_ciudadanias.csv` — ciudadanías por jugador, de Wikidata, para saber quién puede jugar por dos selecciones. Wikidata tiene errores sueltos; cuando no hay dato se usa el país de nacimiento.
+
+Los dos CSV son opcionales: si faltan, el mundo se arma solo con Transfermarkt.
+
+```
+pip install pandas pycountry numpy
+python data/pipeline/build_world.py
+```

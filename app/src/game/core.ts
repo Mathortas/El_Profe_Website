@@ -14,6 +14,7 @@ export interface P {
   per: number[];                                      // ambición, profesionalismo, temple, liderazgo (1..20)
   curve: number;                                      // 0 precoz, 1 tardío, 2 meseta, 3 parejo
   inj: number; injWhat?: string;                      // fechas que le quedan de baja
+  fat?: number;                                       // 0..1, cansancio acumulado dentro de la fecha
   yel: number; sus: number;
   rel: number;                                        // relación con el DT, 0..100
   ret: number;                                        // 0 activo, 1 dejó la selección, 2 retirado
@@ -23,8 +24,15 @@ export interface P {
 }
 
 export interface Nation { c: string; n: string; iso: string; conf: string; pts: number; str: number; youth: number }
-export interface Tactics { form: string; ment: number; pres: number; linea: number; ancho: number; ritmo: number }
-export interface Lineup { xi: number[]; bench: number[]; cap: number; pk: number; tac: Tactics }
+/** Órdenes individuales. Sin pelota: sube, queda, abre, cierra, fuerte. Con pelota: tira, encara, simple. */
+export type Order = 'sube' | 'queda' | 'abre' | 'cierra' | 'fuerte' | 'tira' | 'encara' | 'simple';
+/**
+ * `corner`: 0 variado, 1 primer palo, 2 segundo palo, 3 en corto. `ord`: órdenes por id de jugador.
+ * `estilo`: 0 equilibrado, 1 contraataque, 2 posesión, 3 por las bandas, 4 juego directo.
+ * `marca`: [id del que marca, id del rival marcado].
+ */
+export interface Tactics { form: string; ment: number; pres: number; linea: number; ancho: number; ritmo: number; corner?: number; estilo?: number; marca?: [number, number]; ord?: Record<number, Order[]> }
+export interface Lineup { xi: number[]; bench: number[]; cap: number; pk: number; fk?: number; ck?: number; tac: Tactics }
 
 export interface Fx {
   id: number; comp: Comp; h: string; a: string; label: string; neutral?: boolean;

@@ -28,7 +28,20 @@ export function fit(a: Pos, b: Pos): number {
 export const LEAGUE: Record<string, number> = {
   GB1: 1, ES1: 0.97, IT1: 0.95, L1: 0.95, FR1: 0.9, PO1: 0.82, NL1: 0.82, BRA1: 0.8, BE1: 0.78, TR1: 0.76, ARG1: 0.74,
   MEX1: 0.72, SA1: 0.72, MLS1: 0.7, RU1: 0.7, SC1: 0.66, GR1: 0.66, DK1: 0.66, A1: 0.66, C1: 0.66, TS1: 0.66, JAP1: 0.66,
+  BRA2: 0.62, COL1: 0.62, URU1: 0.6, ECU1: 0.6, CHI1: 0.58, PAR1: 0.58, PER1: 0.55, BOL1: 0.5, VEN1: 0.5,
 };
+/** Ligas del propio país de cada selección. */
+export const HOME: Record<string, string[]> = {
+  PER: ['PER1'], COL: ['COL1'], CHI: ['CHI1'], ECU: ['ECU1'], URU: ['URU1'], PAR: ['PAR1'], BOL: ['BOL1'], VEN: ['VEN1'], ARG: ['ARG1'], BRA: ['BRA1', 'BRA2'],
+  ENG: ['GB1'], ESP: ['ES1'], ITA: ['IT1'], GER: ['L1'], FRA: ['FR1'], POR: ['PO1'], NED: ['NL1'], BEL: ['BE1'], TUR: ['TR1'], MEX: ['MEX1'], USA: ['MLS1'], KSA: ['SA1'],
+  RUS: ['RU1'], SCO: ['SC1'], GRE: ['GR1'], DEN: ['DK1'], AUT: ['A1'], SUI: ['C1'], CZE: ['TS1'], JPN: ['JAP1'], AUS: ['AUS1'], CRO: ['KR1'], NOR: ['NO1'], POL: ['PL1'],
+  ROU: ['RO1'], KOR: ['RSK1'], SWE: ['SE1'], SRB: ['SER1'], UKR: ['UKR1'],
+};
+const SOUTH = new Set(['PER1', 'COL1', 'CHI1', 'ECU1', 'URU1', 'PAR1', 'BOL1', 'VEN1', 'BRA2']);
+/** Juega fuera de su país. Sin liga conocida se toma como liga local. */
+export const abroad = (p: { nat: string; lg: string }) => !!p.lg && !(HOME[p.nat] ?? []).includes(p.lg);
+/** Las ligas sudamericanas chicas reciben a los del país y a sudamericanos de cierto nivel. */
+export const canJoin = (nat: string, lg: string, ovr: number) => !SOUTH.has(lg) || (HOME[nat] ?? []).includes(lg) || (nat in LOCAL && ovr >= 67);
 export const LOCAL: Record<string, number> = { BRA: 0.8, ARG: 0.74, COL: 0.62, URU: 0.6, ECU: 0.6, CHI: 0.58, PAR: 0.58, PER: 0.55, BOL: 0.5, VEN: 0.5 };
 
 /** Sedes de local: [estadio, ciudad, altura en metros, capacidad en miles]. */

@@ -1,6 +1,6 @@
 // Momentos: situaciones cortas con dos o tres salidas. Cada opción dice lo que cuesta antes de elegir.
 import { type Game, type P, type Pending, type Rng, ageOf, clamp, rngFor } from './core.ts';
-import { homeAltitude } from './data.ts';
+import { abroad, homeAltitude } from './data.ts';
 import { available, poolOf } from './players.ts';
 
 type At = 'entre' | 'lista' | 'concentracion' | 'post';
@@ -67,13 +67,13 @@ export const EVENTS: Ev[] = [
       { t: 'Llamarlo esta noche', hint: 'Recuperas la relación. Reconoces que faltó una explicación.', run: (_, c) => { rel(c.p, 10); return `Hablaron veinte minutos. ${c.p!.n} agradeció la llamada y dijo que seguirá trabajando.`; } },
       { t: 'Responder en conferencia', hint: 'Marcas autoridad. La relación se resiente.', run: (g, c) => { rel(c.p, -8); M(g, { prensa: 2 }); return 'Dijiste que las listas se arman por rendimiento. El tema quedó cerrado para la prensa.'; } },
     ] },
-  { id: 'llegan-tarde', at: 'concentracion', place: 'En la concentración', cond: g => squad(g).filter(p => p.lg).length >= 6 && g.md === 0, title: () => 'Tres titulares llegan la noche anterior',
+  { id: 'llegan-tarde', at: 'concentracion', place: 'En la concentración', cond: g => squad(g).filter(abroad).length >= 6 && g.md === 0, title: () => 'Tres titulares llegan la noche anterior',
     text: () => 'Jugaron el domingo en Europa y aterrizan menos de 24 horas antes del primer partido.',
     opts: [
-      { t: 'Ponerlos igual', hint: 'Juegan tus mejores. Llegan con menos piernas.', run: g => { squad(g).filter(p => p.lg).sort((a, b) => b.ovr - a.ovr).slice(0, 3).forEach(p => (p.form = Math.max(-2, p.form - 1))); return 'Entrenaron liviano y dijeron estar listos. Se les nota el viaje.'; } },
+      { t: 'Ponerlos igual', hint: 'Juegan tus mejores. Llegan con menos piernas.', run: g => { squad(g).filter(abroad).sort((a, b) => b.ovr - a.ovr).slice(0, 3).forEach(p => (p.form = Math.max(-2, p.form - 1))); return 'Entrenaron liviano y dijeron estar listos. Se les nota el viaje.'; } },
       { t: 'Darles descanso en el primero', hint: 'Los cuidas. El primer partido lo juegan otros.', run: g => { M(g, { clubes: 3, vestuario: 2 }); return 'Los tres agradecieron el descanso. El grupo lo tomó como una señal de confianza para el resto.'; } },
     ] },
-  { id: 'dos-grupos', at: 'concentracion', place: 'En el comedor', cond: g => g.meters.vestuario < 62 && squad(g).filter(p => p.lg).length >= 5, title: () => 'Dos mesas que no se mezclan',
+  { id: 'dos-grupos', at: 'concentracion', place: 'En el comedor', cond: g => g.meters.vestuario < 62 && squad(g).filter(abroad).length >= 5, title: () => 'Dos mesas que no se mezclan',
     text: () => 'Los que juegan afuera comen por un lado y los del torneo local por otro. Nadie discute, pero se nota.',
     opts: [
       { t: 'Mezclar las habitaciones', hint: 'Integra al grupo. Algunos referentes pierden su rutina.', run: (g, c) => { if (c.r() < 0.7) { M(g, { vestuario: 6, quimica: 3 }); return 'Al tercer día ya había apodos nuevos y una mesa larga.'; } M(g, { vestuario: -2 }); return 'Un par de referentes lo tomaron a mal. El clima quedó raro.'; } },

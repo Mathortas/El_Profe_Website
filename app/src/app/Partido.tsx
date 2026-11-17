@@ -6,7 +6,7 @@ import { FORMS, kits } from '../game/data.ts';
 import { curFx, finishMatch, matchInit, nat } from '../game/flow.ts';
 import type { Frame, MEvent, PIn, Result } from '../game/engine.ts';
 import { act, getGame } from './store.ts';
-import { Tactics } from './Fecha.tsx';
+import { Marca, Orders, Tactics } from './Fecha.tsx';
 import { Nat } from './common.tsx';
 
 interface Ros { id: number; n: string; team: number; role: string; on: boolean; yel: number; hurt: boolean; rate: number; sta: number }
@@ -22,7 +22,7 @@ export function Partido({ g }: { g: Game }) {
   const [hud, setHud] = useState({ min: 1, a: 0, b: 0, banner: '', phase: 'juego', wait: false });
   const [events, setEvents] = useState<MEvent[]>([]), [roster, setRoster] = useState<Ros[]>([]), [bench, setBench] = useState<PIn[][]>([[], []]);
   const [stats, setStats] = useState<number[][]>([]), [subs, setSubs] = useState([0, 0]), [end, setEnd] = useState<Result | null>(null);
-  const [speed, setSpeed] = useState('2'), [paused, setPaused] = useState(false), [tab, setTab] = useState<'relato' | 'cambios' | 'planteo' | 'datos'>('relato'), [out, setOut] = useState(0), [talked, setTalked] = useState(false);
+  const [speed, setSpeed] = useState('2'), [paused, setPaused] = useState(false), [tab, setTab] = useState<'relato' | 'cambios' | 'planteo' | 'datos'>('relato'), [out, setOut] = useState(0), [talked, setTalked] = useState(false), [ordSel, setOrdSel] = useState(0);
   const [goal, setGoal] = useState<{ text: string; team: number; k: number } | null>(null);
   const send = (m: unknown) => wk.current?.postMessage(m);
 
@@ -155,6 +155,9 @@ export function Partido({ g }: { g: Game }) {
         {tab === 'planteo' && <div className="stack">
           <Segmented label="Formación" value={g.lineup.tac.form} onChange={f => { act(x => { x.lineup.tac.form = f; }); send({ type: 'cmd', cmd: { type: 'tac', team: my, tac: { ...getGame().lineup.tac } } }); }} options={Object.keys(FORMS).map(f => ({ value: f, label: f }))} />
           <Tactics g={g} onChange={() => send({ type: 'cmd', cmd: { type: 'tac', team: my, tac: { ...getGame().lineup.tac } } })} />
+          <Marca g={g} mine={mine.filter(r => r.role !== 'POR').map(r => r.id)} rivals={roster.filter(r => r.team !== my && r.on && r.role !== 'POR')} onChange={() => send({ type: 'cmd', cmd: { type: 'tac', team: my, tac: { ...getGame().lineup.tac } } })} />
+          <h3>Órdenes individuales</h3>
+          <Orders g={g} ids={mine.filter(r => r.role !== 'POR').map(r => r.id)} sel={ordSel} onSel={setOrdSel} compact onChange={() => send({ type: 'cmd', cmd: { type: 'tac', team: my, tac: { ...getGame().lineup.tac } } })} />
         </div>}
         {tab === 'datos' && <div>{stats.map((s, i) => <StatDuel key={i} label={S[i]} home={my === 0 ? s[0] : s[1]} away={my === 0 ? s[1] : s[0]} suffix={i === 0 ? '%' : ''} />)}</div>}
       </Panel>
