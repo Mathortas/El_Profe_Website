@@ -7,6 +7,8 @@ import { curFx, finishMatch, matchInit, nat } from '../game/flow.ts';
 import type { Frame, MEvent, PIn, Result } from '../game/engine.ts';
 import { act, getGame } from './store.ts';
 import { Marca, Orders, Tactics } from './Fecha.tsx';
+import { Ayudante } from './Analisis.tsx';
+import { leer } from '../game/lectura.ts';
 import { Nat } from './common.tsx';
 
 interface Ros { id: number; n: string; team: number; role: string; on: boolean; yel: number; hurt: boolean; rate: number; sta: number }
@@ -21,6 +23,7 @@ export function Partido({ g }: { g: Game }) {
   const fr = useRef({ prev: null as Frame | null, cur: null as Frame | null, tPrev: 0, tCur: 0, roles: [] as string[], names: [] as string[], goalAt: 0, goalTeam: 0, parts: [] as Part[], trail: [] as number[][], last: 0 });
   const [hud, setHud] = useState({ min: 1, a: 0, b: 0, banner: '', phase: 'juego', wait: false });
   const [events, setEvents] = useState<MEvent[]>([]), [roster, setRoster] = useState<Ros[]>([]), [bench, setBench] = useState<PIn[][]>([[], []]);
+  const [tact, setTact] = useState<number[][]>([]);
   const [stats, setStats] = useState<number[][]>([]), [subs, setSubs] = useState([0, 0]), [end, setEnd] = useState<Result | null>(null);
   const [speed, setSpeed] = useState('2'), [paused, setPaused] = useState(false), [tab, setTab] = useState<'relato' | 'cambios' | 'planteo' | 'datos'>('relato'), [out, setOut] = useState(0), [talked, setTalked] = useState(false), [ordSel, setOrdSel] = useState(0);
   const [goal, setGoal] = useState<{ text: string; team: number; k: number } | null>(null);
@@ -43,7 +46,7 @@ export function Partido({ g }: { g: Game }) {
           setGoal({ text: ev.text, team: ev.team, k: Date.now() }); clearTimeout(goalTimer); goalTimer = window.setTimeout(() => setGoal(null), 2600);
         }
       }
-      if (d.roster) { setRoster(d.roster); r.roles = (d.roster as Ros[]).map(x => x.role); r.names = (d.roster as Ros[]).map(x => x.n.split(' ').slice(-1)[0]); setBench(d.bench); setStats(d.stats); setSubs(d.subs.slice()); }
+      if (d.roster) { setRoster(d.roster); r.roles = (d.roster as Ros[]).map(x => x.role); r.names = (d.roster as Ros[]).map(x => x.n.split(' ').slice(-1)[0]); setBench(d.bench); setStats(d.stats); if (d.tact) setTact(d.tact); setSubs(d.subs.slice()); }
     };
     w.postMessage({ type: 'init', init });
     let raf = 0;
@@ -111,6 +114,9 @@ export function Partido({ g }: { g: Game }) {
   }, []);
 
   const mine = roster.filter(r => r.team === my && r.on), left = 5 - subs[my], diff = (my === 0 ? hud.a - hud.b : hud.b - hud.a);
+  // El ayudante revisa cada cinco minutos para no cambiar de opinión a cada rato.
+  const tramo = Math.floor(hud.min / 5), avgSta = (l: Ros[]) => (l.length ? l.reduce((x, r) => x + r.sta, 0) / l.length : undefined);
+  const consejos = useMemo(() => leer({ my, min: hud.min, stats, tact, fisico: avgSta(mine), fisicoRival: avgSta(roster.filter(r => r.team !== my && r.on)), tac: g.lineup.tac }, 2), [tramo, g.lineup.tac]); // eslint-disable-line
   const talk = (k: number) => { send({ type: 'cmd', cmd: { type: 'talk', team: my, k } }); setTalked(true); };
   const TALK = diff < 0 ? ['Hay que ir a buscarlo: todos un paso adelante', 'Confío en ustedes: jueguen como saben', 'Primero ordenarnos, el gol va a llegar']
     : diff > 0 ? ['Vamos por otro para cerrarlo', 'Sigan así, sin regalar nada', 'A cuidar la pelota y bajar el ritmo']
@@ -144,6 +150,7 @@ export function Partido({ g }: { g: Game }) {
         </div>
       </div>
       <Panel className="match__side">
+        <div className="ayu-box"><h3>Tu ayudante</h3><Ayudante items={consejos} vivo /></div>
         <Segmented label="Panel" value={tab} onChange={setTab} options={[{ value: 'relato', label: 'Relato' }, { value: 'cambios', label: `Cambios (${left})` }, { value: 'planteo', label: 'Planteo' }, { value: 'datos', label: 'Datos' }]} />
         {tab === 'relato' && <ul className="feed">{events.map((e, i) => { const I = EV_ICON[e.type]; return <li key={events.length - i} className={`${e.type}${e.team === my ? ' mine' : ''}`}><span className="num">{e.min}'</span><I size={15} /><span>{e.text}</span></li>; })}{!events.length && <li className="muted">Empezó el partido.</li>}</ul>}
         {tab === 'cambios' && <div className="subs">

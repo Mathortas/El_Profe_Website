@@ -6,6 +6,7 @@ import { createTour, elimSlots, elimTable, fixturesFor, myTourMatch, odds, playS
 import type { MatchInit, PIn, Result, TeamIn } from './engine.ts';
 import { checkPromises, drawEvents } from './events.ts';
 import { SAVE_V } from './save.ts';
+import { leer } from './lectura.ts';
 
 let CLUBS: Record<string, string[]> = {}, URNS: Record<string, [string[], string[]]> = {};
 export let LEAGUES: Record<string, [string, string]> = {};
@@ -236,8 +237,12 @@ export function finishMatch(g: Game, res: Result) {
   const imp = fx.comp === 'AM' ? 0.5 : fx.comp === 'EL' ? 1 : fx.ko ? 1.9 : 1.4;
   bump(g, { fed: (v - exp) * 8 * imp + (v === 1 ? 1 : v === 0 ? -1.5 : 0), prensa: (v - exp) * 11 * imp + (v === 0 ? -1 : 0), hinchas: (v - exp) * 9 * imp + clamp(my - their, -3, 2), vestuario: (v === 1 ? 2 : v === 0 ? -3 : 0) * imp, quimica: 1 });
   const names = res.scorers.map(sc => `${m.get(sc.id)?.n ?? '—'} ${sc.min}'${(sc.team === 0) === home ? '' : ' (rival)'}`);
-  g.log.unshift({ fx: { ...fx }, my, their, rating: res.rating, scorers: names, stats: res.stats, note: res.pens ? (penW ? 'pen' : 'penp') : undefined });
+  const side = home ? 0 : 1;
+  const read = res.tact ? leer({ my: side, min: 90, stats: res.stats, tact: res.tact, fisico: res.sta?.[side], fisicoRival: res.sta?.[1 - side], tac: g.lineup.tac }, 4).map(({ tono, texto }) => ({ tono, texto })) : [];
+  const an = res.shots ? { shots: res.shots, heat: res.heat, tact: res.tact, sta: res.sta, read } : undefined;
+  g.log.unshift({ fx: { ...fx }, my, their, rating: res.rating, scorers: names, stats: res.stats, note: res.pens ? (penW ? 'pen' : 'penp') : undefined, an });
   if (g.log.length > 80) g.log.length = 80;
+  for (let i = 12; i < g.log.length; i++) delete g.log[i].an;                       // el análisis completo solo de los últimos partidos
   g.lastTalk = undefined;
   g.pending.push(...drawEvents(g, 'post', r));
   g.ph = 'post';

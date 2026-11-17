@@ -5,7 +5,7 @@ let m: Match | null = null, speed = 2, paused = false, timer = 0, acc = 0, sent 
 const post = (full: boolean) => {
   if (!m) return;
   const events = m.events.slice(sent); sent = m.events.length;
-  postMessage({ type: 'frame', f: m.frame(), events, roster: full || events.length ? m.roster() : undefined, stats: full || events.length ? m.result().stats : undefined, bench: full || events.length ? m.bench : undefined, subs: m.subs, wait: m.humanWait });
+  postMessage({ type: 'frame', f: m.frame(), events, roster: full || events.length ? m.roster() : undefined, stats: full || events.length ? m.result().stats : undefined, tact: full || events.length ? m.tact : undefined, bench: full || events.length ? m.bench : undefined, subs: m.subs, wait: m.humanWait });
 };
 function tick() {
   if (!m || ended) return;

@@ -11,6 +11,7 @@ import { act, go, openPlayer } from './store.ts';
 import { Lvl, Meters, Nat, score } from './common.tsx';
 import { Events } from './EntreFechas.tsx';
 import { Partido } from './Partido.tsx';
+import { Ayudante, MapaCalor, MapaRemates, NumerosTacticos } from './Analisis.tsx';
 
 const ESTILO_HINT = [
   'Sin un plan marcado: el equipo decide según la jugada.',
@@ -196,6 +197,19 @@ function Post({ g }: { g: Game }) {
         <p className="muted center">{l.scorers.join(' · ') || 'Sin goles'}</p>
       </Panel>
       <Events g={g} />
+      {l.an && <Panel title="Qué pasó" icon={<Sparkles size={17} />} className="analisis">
+        <div className="analisis__top">
+          <div className="stack">
+            <Ayudante items={l.an.read} />
+            <MapaRemates shots={l.an.shots} my={home ? 0 : 1} names={[nat(g, g.me).n, nat(g, home ? l.fx.a : l.fx.h).n]} />
+          </div>
+          <div className="stack">
+            <div className="heat__pair"><MapaCalor heat={l.an.heat[home ? 0 : 1]} label={nat(g, g.me).n} /><MapaCalor heat={l.an.heat[home ? 1 : 0]} label={nat(g, home ? l.fx.a : l.fx.h).n} /></div>
+            <NumerosTacticos tact={l.an.tact} my={home ? 0 : 1} />
+            <p className="muted small">Al final al equipo le quedaba {Math.round((l.an.sta[home ? 0 : 1] ?? 0) * 100)} % de piernas; al rival, {Math.round((l.an.sta[home ? 1 : 0] ?? 0) * 100)} %.</p>
+          </div>
+        </div>
+      </Panel>}
       <div className="grid two">
         <Panel title="Notas">
           <ul className="plain">{mine.map(({ p, r }) => <li key={p!.id}><span><PositionChip pos={p!.pos} /> <button className="link" onClick={() => openPlayer(p!.id)}>{p!.n}</button></span><b className={`num nota ${r >= 7.5 ? 'hi' : r < 5.5 ? 'lo' : ''}`}>{r.toFixed(1)}</b></li>)}</ul>

@@ -247,3 +247,33 @@
 .pp__t { font-size: 14px; fill: var(--warn); paint-order: stroke; stroke: rgba(0,0,0,.6); stroke-width: 3; }
 .marca { margin-top: 8px; align-items: center; }
 @media (max-width: 560px) { .rivalxi { grid-template-columns: 1fr; } }
+
+/* Ayudante y análisis del partido */
+.ayu-box { margin-bottom: var(--sp-3); padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-card, 12px); background: var(--surface-2); }
+.ayu-box h3 { margin: 0 0 6px; font-size: var(--fs-13); color: var(--text-2); font-weight: 600; }
+.ayu { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ayu li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: start; font-size: var(--fs-13); line-height: 1.45; animation: rise .35s var(--ease) both; }
+.ayu li svg { margin-top: 2px; }
+.ayu li.bien svg { color: var(--good); } .ayu li.ojo svg { color: var(--warn); } .ayu li.dato svg { color: var(--accent); }
+.ayu.vivo li { animation: ayuIn .45s var(--ease) both; }
+@keyframes ayuIn { from { opacity: 0; transform: translateX(8px); background: color-mix(in srgb, var(--accent) 14%, transparent); } }
+.analisis__top { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); align-items: start; }
+.shotmap { margin: 0; } .shotmap svg { width: 100%; display: block; }
+.sm__grass { fill: #2f7a43; } .sm__lines { fill: none; stroke: rgba(255,255,255,.55); stroke-width: .35; }
+.sm__shot { transform-box: fill-box; transform-origin: center; animation: pop .45s var(--ease) both; }
+.sm__shot circle { stroke-width: .45; }
+.sm__shot.ours circle { stroke: var(--accent); fill: color-mix(in srgb, var(--accent) 22%, transparent); }
+.sm__shot.theirs circle { stroke: #fff; fill: rgba(255,255,255,.14); }
+.sm__shot.r2 circle { stroke-width: .7; } .sm__shot.ours.r2 circle { fill: var(--accent); } .sm__shot.theirs.r2 circle { fill: #fff; }
+.sm__shot.r0 circle { stroke-dasharray: .9 .6; fill: none; } .sm__shot path { stroke: #fff; stroke-width: .35; }
+@keyframes pop { from { opacity: 0; transform: scale(.2); } 70% { transform: scale(1.15); } }
+.sm__leg { display: grid; gap: 2px; margin-top: 8px; font-size: var(--fs-13); }
+.sm__leg .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.sm__leg .dot.ours { background: var(--accent); } .sm__leg .dot.theirs { background: #fff; border: 1px solid var(--line); }
+.heat__pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.heat { margin: 0; } .heat figcaption { display: grid; gap: 2px; margin-top: 6px; font-size: var(--fs-13); }
+.heat__grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr); aspect-ratio: 105 / 68; gap: 2px; padding: 3px; border-radius: 6px; background: #2f7a43; }
+.heat__grid i { border-radius: 2px; background: #fff7c2; animation: fadeIn .6s var(--ease) both; }
+@keyframes fadeIn { from { opacity: 0 !important; } }
+@media (max-width: 900px) { .analisis__top { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .sm__shot, .heat__grid i, .ayu li { animation: none; } }

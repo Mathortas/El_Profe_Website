@@ -9,7 +9,13 @@ export interface MatchInit { home: TeamIn; away: TeamIn; seed: number; ko: boole
 export interface MEvent { min: number; type: 'gol' | 'amarilla' | 'roja' | 'cambio' | 'ocasion' | 'lesion' | 'info' | 'penal'; team: number; text: string; pid?: number }
 export type Cmd = { type: 'sub'; team: number; out: number; in: number } | { type: 'tac'; team: number; tac: Tactics } | { type: 'talk'; team: number; k: number } | { type: 'resume' };
 export interface Frame { t: number; min: number; score: [number, number]; ball: [number, number, number]; pos: number[]; owner: number; banner: string; phase: string; sta: number[]; shot: boolean }
-export interface Result { gh: number; ga: number; pens?: [number, number]; events: MEvent[]; rating: Record<number, number>; stats: number[][]; tact: number[][]; mins: Record<number, number>; played: number[]; injured: number[]; cards: Record<number, string>; scorers: { id: number; min: number; team: number }[] }
+export interface Result { gh: number; ga: number; pens?: [number, number]; events: MEvent[]; rating: Record<number, number>; stats: number[][]; tact: number[][]; mins: Record<number, number>;
+  /** Remates: equipo, x e y (hacia donde ataca, 0..105 y 0..68), probabilidad de gol, resultado (0 afuera, 1 atajado, 2 gol, 3 bloqueado), minuto. */
+  shots: number[][];
+  /** Dónde tuvo la pelota cada equipo: 6 columnas por 4 filas, en su sentido de ataque. */
+  heat: number[][];
+  /** Físico medio de los que terminaron en la cancha, por equipo. */
+  sta: number[]; played: number[]; injured: number[]; cards: Record<number, string>; scorers: { id: number; min: number; team: number }[] }
 
 interface MP extends PIn { team: number; slot: number; role: Pos; sx: number; sy: number; x: number; y: number; vx: number; vy: number; sta: number; on: boolean; yel: number; rate: number; cool: number; ox: number; oy: number; hurt: boolean }
 const W = 105, H = 68, DT = 0.1, HALF = 300;
@@ -30,6 +36,7 @@ export class Match {
   setPlay: { until: number; spots: Map<number, [number, number]> } | null = null;
   // Lectura táctica por equipo: pases al espacio, los que llegaron, recuperaciones en campo rival, tiros de contra, centros, pelotazos
   tact = [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]];
+  shotLog: number[][] = []; heat = [new Array(24).fill(0), new Array(24).fill(0)];
   time: Record<number, number> = {};                                             // segundos de simulación jugados por cada jugador
   won = [-99, -99];                                                              // cuándo recuperó la pelota cada equipo
   thru = false;                                                                  // el pase en vuelo va al espacio
@@ -209,6 +216,7 @@ export class Match {
     b.vx = ((gx - p.x) / dd) * speed; b.vy = ((gy - p.y) / dd) * speed; b.dur = (dd * cut) / speed; b.age = 0;
     b.state = 'fly'; b.air = d > 16; b.owner = -1; b.last = this.ps.indexOf(p); b.to = -1;
     b.shot = { goal, save: on && !goal, by: this.ps.indexOf(p), xg };
+    this.shotLog.push([team, Math.round(this.tx(team, p.x) * 10) / 10, Math.round(this.ty(team, p.y) * 10) / 10, Math.round(xg * 100) / 100, blocked ? 3 : goal ? 2 : on ? 1 : 0, this.min]);
     p.rate += on ? 0.12 : -0.03;
     if (blocked) b.shot = null;
     if (xg > 0.16 && !goal) this.ev('ocasion', team, `${p.n} tuvo una clara`, p.id);
@@ -308,7 +316,11 @@ export class Match {
     if (b.state === 'held') this.held();
     else if (b.state === 'fly') this.fly();
     else if (b.state === 'loose') this.loose();
-    if (b.state !== 'dead') this.stats[0][this.poss]++;
+    if (b.state !== 'dead') {
+      this.stats[0][this.poss]++;
+      const hx = Math.min(5, Math.floor(this.tx(this.poss, b.x) / 17.5)), hy = Math.min(3, Math.floor(this.ty(this.poss, b.y) / 17));
+      this.heat[this.poss][hy * 6 + hx]++;
+    }
     for (const p of this.ps) if (p.on) this.time[p.id] = (this.time[p.id] ?? 0) + DT;
     if (!this.restart || this.restart.type !== 'penalty') this.clock();
   }
@@ -618,7 +630,9 @@ export class Match {
     for (const p of this.ps) rating[p.id] = Math.round(clamp(p.rate + (p.role === 'POR' && this.score[1 - p.team] === 0 ? 0.6 : 0), 3, 10) * 10) / 10;
     const tot = this.stats[0][0] + this.stats[0][1] || 1;
     const stats = this.stats.map((s, i) => (i === 0 ? [Math.round((s[0] / tot) * 100), 100 - Math.round((s[0] / tot) * 100)] : s.slice()));
-    return { gh: this.score[0], ga: this.score[1], pens: this.pens, events: this.events, rating, stats, tact: this.tact.map(x => x.slice()), mins: Object.fromEntries(Object.entries(this.time).map(([id, t]) => [id, Math.min(1, t / 600)])), played: [...this.used[0], ...this.used[1]], injured: this.injured, cards: this.cards, scorers: this.scorers };
+    return { gh: this.score[0], ga: this.score[1], pens: this.pens, events: this.events, rating, stats, tact: this.tact.map(x => x.slice()), mins: Object.fromEntries(Object.entries(this.time).map(([id, t]) => [id, Math.min(1, t / 600)])),
+      shots: this.shotLog.map(x => x.slice()), heat: this.heat.map(x => x.slice()),
+      sta: [0, 1].map(t => { const l = this.ps.filter(p => p.on && p.team === t); return Math.round(l.reduce((x, p) => x + p.sta, 0) / (l.length || 1) * 100) / 100; }), played: [...this.used[0], ...this.used[1]], injured: this.injured, cards: this.cards, scorers: this.scorers };
   }
   /** Juega hasta el final sin pausas (para simular o saltar). */
   finish() {

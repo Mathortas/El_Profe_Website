@@ -43,7 +43,8 @@ export interface TM { h: string; a: string; gh?: number; ga?: number; pens?: [nu
 export interface Tour { id: 'CA' | 'MU'; y: number; teams: string[]; groups: string[][]; gm: TM[]; ko: TM[][]; stage: number; champ?: string; host: string }
 export interface Msg { id: number; who: 'fed' | 'med' | 'club' | 'prensa' | 'ct' | 'jug'; from: string; text: string; when: string; read?: boolean }
 export interface Pending { ev: string; who?: number; rival?: string }
-export interface MatchLog { fx: Fx; my: number; their: number; rating: Record<number, number>; scorers: string[]; stats: number[][]; note?: string }
+/** `an`: análisis del partido (remates, zonas, lectura táctica y lo que dijo el ayudante). Solo se guarda en los últimos partidos. */
+export interface MatchLog { fx: Fx; my: number; their: number; rating: Record<number, number>; scorers: string[]; stats: number[][]; note?: string; an?: { shots: number[][]; heat: number[][]; tact: number[][]; sta: number[]; read: { tono: 'bien' | 'ojo' | 'dato'; texto: string }[] } }
 
 export interface Game {
   v: number; seed: number; me: string; dt: string; started: number;
